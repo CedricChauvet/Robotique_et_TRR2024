@@ -17,6 +17,6 @@ Contient 3 programmes pour son fonctionnement,
 
 
 Le T-Rot est un robot roulant a 3 roues, il se déplace grace a 2 moteurs asservis en PWM. Sa fonction est de suivre une bordure.
-Il inclue un arduino MKR Zero, 2 telemetres positionnés à droite du chassis ainsi qu'un gyroscope.
+Il inclue un arduino MKR Zero, 2 telemetres positionnés à gauche du chassis ainsi qu'un gyroscope.
 
 ![image](https://github.com/CedricChauvet/Robotique_et_robots/assets/16280142/7a96cdfc-2575-4e30-9adf-6af0178f3f4b)
