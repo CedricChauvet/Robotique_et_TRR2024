@@ -8,5 +8,5 @@ Contient 3 programmes pour son fonctionnement,
   
   -copy_file_to_serial assure la transmission de la carte SD vers l'ordinateur via le bus Serial
   
-  -Arduino to script python lit les donnée arrivant de l'arduino pour les afficher a l'ecran
+  -Arduino to script python lit les données arrivant de l'arduino pour les afficher a l'ecran
 ![image](https://github.com/CedricChauvet/Robotique_et_robots/assets/16280142/5e54cd1c-4bbd-4c4a-ab1f-c16b9fdd1735)
