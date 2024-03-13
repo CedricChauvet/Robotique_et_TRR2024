@@ -5,7 +5,7 @@
 Reception des données émise par un Arduino branché
 à un port USB.    
 D'abord lancez le programme copyfile to serial.ino
-rebootez l'arduino puis lancez le script.
+rebootez l'arduino puis lancez le script. devrait retourner les données de cours sous la forme de plot
 '''
 import sys
 import serial
