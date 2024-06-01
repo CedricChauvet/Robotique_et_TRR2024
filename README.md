@@ -14,7 +14,7 @@ Cédric CHAUVET, devolppeur python et en formation machine learning.
 
 depuis plus de 5 ans, nous nous démenons pour proposer des robots pour la Toulouse Robot Race.
 
-Nous avons 1 joli titre de marcheur en 2023 et une troisieme place chez les roulants pour l'édition 2024!
+Nous avons 1 joli titre de marcheur en 2023 et une 3eme place chez les roulants pour l'édition 2024!
 
 
 ## LA TRR
