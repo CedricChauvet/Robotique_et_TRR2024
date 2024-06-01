@@ -1,6 +1,9 @@
-# Robot T-rot participant à la ToulouseRobotRace
+# Repo de l'equipe des cools
+    ## participant a la toulouse Robot Race
 
 ![image](https://github.com/CedricChauvet/Robotique_et_robots/assets/16280142/7a96cdfc-2575-4e30-9adf-6af0178f3f4b)
+
+ Robot T-rot participant à la
 
 ## Sommaire
 
