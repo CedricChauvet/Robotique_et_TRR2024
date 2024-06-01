@@ -1,5 +1,5 @@
 # Repo de l'equipe des cools
-## Participants a la toulouse Robot Race (2022 - 2024)
+## Participants a la toulouse Robot Race (2018 - 2024)
 
 
 Bonjour!
