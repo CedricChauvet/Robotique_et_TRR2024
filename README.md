@@ -31,13 +31,13 @@ Cette course est avant tout un moment de rencontre convivial et ludique entre pr
 
 2 circuits, 7 épreuves au total pour battre les records des années précédentes.
 
--TRR Roulant : des robots, équipés de roues doivent parcourir une piste de 1m50 de large et 110m de long le plus rapidement possible. La ligne d’arrivée est notamment précédée d’une longue ligne droite de 50m. De beaux sprints en perspective !
-Tiny TRR Roulant : les même robots doivent parcourir un circuit de 7 virages serrés plusieurs fois. Il va falloir contrôler les dérapages !
-TRR Dans La Vraie Vie : les robots sont ici aussi équipés de roues mais doivent démarrer au feu vert de manière autonome. Attention, le parcours est semé d’obstacles.
-Tiny TRR Dans La Vraie Vie : idem mais sur le petit circuit. Le challenge est donc ici plus grand : repérer beaucoup plus d’obstacles dans des virages sérrés
-TRR Piéton : Cette fois-ci, les robots n’ont pas de roues mais deux appuis principaux au sol. Il doivent parcourir une longue ligne droite de 7m le plus rapidement possible.
-TRR Multipatte : Pour les robots qui ne sont ni roulants, ni piétons, cette épreuve consiste aussi à parcourir 7m en ligne droite.
-TRR Multipatte bis : Il s’agit de parcourir cette fois un tour du circuit de la Tiny TRR le plus rapidement possible. Épreuve spécialement dédiée aux quadrupèdes.
+ - TRR Roulant : des robots, équipés de roues doivent parcourir une piste de 1m50 de large et 110m de long le plus rapidement possible. La ligne d’arrivée est notamment précédée d’une longue ligne droite de 50m. De beaux sprints en perspective !
+ - Tiny TRR Roulant : les même robots doivent parcourir un circuit de 7 virages serrés plusieurs fois. Il va falloir contrôler les dérapages !
+ - TRR Dans La Vraie Vie : les robots sont ici aussi équipés de roues mais doivent démarrer au feu vert de manière autonome. Attention, le parcours est semé d’obstacles.
+ - Tiny TRR Dans La Vraie Vie : idem mais sur le petit circuit. Le challenge est donc ici plus grand : repérer beaucoup plus d’obstacles dans des virages sérrés
+ - TRR Piéton : Cette fois-ci, les robots n’ont pas de roues mais deux appuis principaux au sol. Il doivent parcourir une longue ligne droite de 7m le plus rapidement possible.
+ - TRR Multipatte : Pour les robots qui ne sont ni roulants, ni piétons, cette épreuve consiste aussi à parcourir 7m en ligne droite.
+ - TRR Multipatte bis : Il s’agit de parcourir cette fois un tour du circuit de la Tiny TRR le plus rapidement possible. Épreuve spécialement dédiée aux quadrupèdes.
 
 
 
