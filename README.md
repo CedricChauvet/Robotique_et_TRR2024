@@ -24,7 +24,7 @@ Nous avons 1 joli titre de marcheur en 2023 et une troisieme place chez les roul
 
 
 
-[lien vers le site de la TRR](http://www.toulouse-robot-race.org/)
+[www.toulouse-robot-race.org](http://www.toulouse-robot-race.org/)
 
 
 ## Nos robots
