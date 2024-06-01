@@ -5,7 +5,9 @@
 
  Robot T-rot :
  2 moteurs, 2 télémetres et 2 odométries.
+ 
  Ce robot a 2 capteurs situé sur la partie latérale droite a pour but de suivre la bordure du circuit.
+ 
  1 particpation
 
 ## Sommaire
