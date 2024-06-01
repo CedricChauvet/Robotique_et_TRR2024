@@ -17,6 +17,16 @@ depuis plus de 5 ans, nous nous démenons pour proposer des robots pour la Toulo
 Nous avons 1 joli titre de marcheur en 2023 et une troisieme place chez les roulants pour l'édition 2024!
 
 
+## LA TRR
+
+![image](https://github.com/CedricChauvet/Robotique_et_TRR2024/assets/16280142/feb0a9f2-9e4a-4e39-884e-91674a361091)
+
+
+
+
+[lien vers le site de la TRR](http://www.toulouse-robot-race.org/)
+
+
 ## Nos robots
 
  [T_REX](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/T_REX)
