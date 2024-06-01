@@ -1,8 +1,10 @@
 # Repo de l'equipe des cools
 ## Participants a la toulouse Robot Race (2018 - 2024)
 
+### Qui sommes nous?
 
 Bonjour!
+
 Nous sommes les cools, 4 competiteurs acharnés de la Toulouse Robot Race. Nous comptons 5 participations à ce challenge depuis 2018.
 
 Il y a Bernard Tatry, ancien ingenieur du CNES.
