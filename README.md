@@ -36,6 +36,12 @@ Nous comptons plus d'une dizaine de robot construits
 
  [T_ROT](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/T_ROT)
 
+ [Truggy](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/Truggy)
+
+ [Marcheur](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/marcheur)
+
+ [Minouche](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/Minouche)
+
 
 
 
