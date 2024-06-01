@@ -14,6 +14,8 @@
 
  [T_REX](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/T_REX)
 
+ [T_ROT](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/T_ROT)
+
 
 
 
