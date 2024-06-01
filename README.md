@@ -29,6 +29,8 @@ Nous avons 1 joli titre de marcheur en 2023 et une troisieme place chez les roul
 
 ## Nos robots
 
+Nous comptons plus d'une dizaine de robot construits
+
  [T_REX](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/T_REX)
 
  [T_ROT](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/T_ROT)
