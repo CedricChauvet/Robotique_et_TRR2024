@@ -4,13 +4,14 @@
 
 Bonjour!
 Nous sommes les cools, 4 competiteurs acharnés de la Toulouse Robot Race. Nous comptons 5 participations à ce challenge depuis 2018.
-il y a Beranrd Tatry, ancien ingenieur du CNES.
+
+Il y a Bernard Tatry, ancien ingenieur du CNES.
 
 Daniel Vaillant, informaticien specialiste des reseaux.
 
 Jean Claude Lecoules, ancien professeur et bricoleur génial.
 
-Cédric CHAUVET, devolppeur python et en formation machine learning.
+Cédric CHAUVET, devoloppeur python et en formation machine learning.
 
 depuis plus de 5 ans, nous nous démenons pour proposer des robots pour la Toulouse Robot Race.
 
