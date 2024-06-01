@@ -3,12 +3,12 @@
 
 
 Bonjour!
-Nous sommes les cools, 4 competiteurs acharnés de la Toulouse Robot Race. Nous comptons 5 participation a ce challenge depuis 2018.
+Nous sommes les cools, 4 competiteurs acharnés de la Toulouse Robot Race. Nous comptons 5 participations à ce challenge depuis 2018.
 il y a Beranrd Tatry, ancien ingenieur du CNES.
 
 Daniel Vaillant, informaticien specialiste des reseaux.
 
-Jean Claude Lecoules, ancien prfesseur et bricoleur génial.
+Jean Claude Lecoules, ancien professeur et bricoleur génial.
 
 Cédric CHAUVET, devolppeur python et en formation machine learning.
 
