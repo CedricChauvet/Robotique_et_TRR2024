@@ -2,7 +2,7 @@
 #include <Wire.h>//https://www.arduino.cc/en/reference/wire
 #include <Adafruit_PWMServoDriver.h>//https://github.com/adafruit/Adafruit-PWM-Servo-Driver-Library
 //Constants
-#define nbPCAServo 6
+#define nbPCAServo 6  // 4 servos pour la marche plus 2 servo pour l'equilibre
 
 
 Adafruit_PWMServoDriver pca= Adafruit_PWMServoDriver(0x40);
@@ -16,7 +16,6 @@ int mouvement[nbPCAServo][4] = {{-300, 300, -300, 300},
                                 {-300, 300, -500, -300},
                                 {-300, 300, -300, 300}}; 
 
-int state[4];
 
 void setup(){
   //Init Serial USB
@@ -25,6 +24,8 @@ void setup(){
   pca.begin();
   pca.setPWMFreq(60);   // Analog servos run at ~60 Hz updates
 }
+
+
 void loop(){
      
   etapes( mouvement[0], mouvement[1], 10);
@@ -33,6 +34,7 @@ void loop(){
   Serial.println("une boucle!");
   delay(2000);
 }
+
 
 void etapes(int i[4], int j[4],int steps){
   for(int x = 0; x<steps; x++){
