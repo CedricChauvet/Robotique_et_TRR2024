@@ -22,6 +22,26 @@ depuis plus de 5 ans, nous nous démenons pour proposer des robots pour la Toulo
 Nous avons 1 joli titre de marcheur en 2023 et une 3eme place chez les roulants pour l'édition 2024!
 
 
+## Nos robots
+
+Nous comptons plus d'une dizaine de robot construits
+
+ [T_REX](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/T_REX)
+
+ [T_ROT](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/T_ROT)
+
+ [Truggy](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/Truggy)
+
+ [Marcheur](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/marcheur)
+
+ [Minouche](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/Minouche)
+
+
+
+
+
+
+
 ## LA TRR
 
 ![image](https://github.com/CedricChauvet/Robotique_et_TRR2024/assets/16280142/feb0a9f2-9e4a-4e39-884e-91674a361091)
@@ -48,22 +68,4 @@ https://github.com/CedricChauvet/Robotique_et_TRR2024/assets/16280142/2e0e8c0a-b
 
 
 [www.toulouse-robot-race.org](http://www.toulouse-robot-race.org/)
-
-
-# Nos robots
-
-Nous comptons plus d'une dizaine de robot construits
-
- [T_REX](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/T_REX)
-
- [T_ROT](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/T_ROT)
-
- [Truggy](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/Truggy)
-
- [Marcheur](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/marcheur)
-
- [Minouche](https://github.com/CedricChauvet/Robotique_et_TRR2024/tree/main/Minouche)
-
-
-
 
