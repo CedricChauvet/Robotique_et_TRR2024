@@ -53,6 +53,7 @@ float K2 = 0.7;                                  // coefficient erreur distance
 long int t0;                                      // variables mesure durée de traitement boucle loop
 long int t1;
 
+
 void setup() {
   Serial.begin(115200);                             //initialisation vitesse port série entre arduino mega et pc
   Serial1.begin(115200);                            //initialisation vitesse port série entre arduino mega et 1° laser
@@ -70,6 +71,7 @@ void setup() {
   //consi=consiVite;
 }
 
+
 void loop() {
 litLaserAR();                                   // appel fonction lecture laser arrière
 litLaserAV();                                   // appel fonction lecture laser avant
@@ -81,6 +83,7 @@ ouEstil();                                      // appel fonction pour savoir qu
 motor();                                // appel fonction commande ESC/moteur
 // debug();
 }
+
 
 void litLaserAV() {
   if (Serial1.available()) {                            //contrôle si data en entrées sur port série
@@ -101,6 +104,7 @@ void litLaserAV() {
     }
   }
 }
+
 
 void litLaserAR() {
   if (Serial2.available()) {                          //contrôle si data en entrées sur port série
@@ -123,6 +127,7 @@ void litLaserAR() {
   }
 }
 
+
 void litLaserFRONT() {
   if (Serial3.available()) {                            //contrôle si data en entrées sur port série
     if (Serial3.read() == HEADER) {                   //contrôler la valeur de l'entête du paquet de données présente dans l'octet 0
@@ -143,14 +148,18 @@ void litLaserFRONT() {
   }
 }
 
+
 void Erreurs() {
-alpha = atan((d2 - d1) / l) * 180 / 3.14159;        // calcul en ° de l'angle axe véhicule avec tangente locale trajectoire. atan sort des rd donc à transformer en °
-erreurs = K1 * (consigneAlpha - alpha) + K2 * (consigneD - d2); // erreur totale en ° : somme erreur alpha + erreur distance
-angleBraq = ( -1.*erreurs) + 87;
-//angleBraq=angleDefault;
+  // cette fonction calcul l'erreur par rapport a l'angle et la distance de consigne
+  alpha = atan((d2 - d1) / l) * 180 / 3.14159;        // calcul en ° de l'angle axe véhicule avec tangente locale trajectoire. atan sort des rd donc à transformer en °
+  erreurs = K1 * (consigneAlpha - alpha) + K2 * (consigneD - d2); // erreur totale en ° : somme erreur alpha + erreur distance
+  angleBraq = ( -1.*erreurs) + 87;
+  //angleBraq=angleDefault;
 }
 
+
 void compteur() {
+  // cette fonction réalise l'incrementation de l'odometrie  
   val = digitalRead(pinHall);
   if (val == HIGH && lastval == LOW) {
     lastval = HIGH;
@@ -166,52 +175,55 @@ void compteur() {
   }
 }
 
+
 void ouEstil() {
-cumDist = (pulse_count) * (3.1416 * diamRoue) / 2; // cumul de la distance en cm
-for (int i = 0; i <= 8; i++) {
+  cumDist = (pulse_count) * (3.1416 * diamRoue) / 2; // cumul de la distance en cm
+  for (int i = 0; i <= 8; i++) {
     if (cumDist >= tronCon[i][0] and cumDist < tronCon[i + 1][0]) {
-    PwmVIT = tronCon[i][1];
+      PwmVIT = tronCon[i][1];
     }
   }
 }
+
 
 void movServo() {
   angleBraq = constrain(angleBraq, 55, 115);
   Serial.print("myservo");
   Serial.println(angleBraq);
-  
   myServo.write(angleBraq);
 }
 
+
 void motor() {
-if (d3 >= 300.) {
-myEsc.writeMicroseconds(1635.);      // commande vitesse du tronçon avec l'asservissement
-TESTF=1;
-}
-else {
-if(TESTF==1){
-PwmVIT=1500.;
-delay(500);
-PwmVIT=1420;                              // impulsion marche AR pour freiner
-myEsc.writeMicroseconds(PwmVIT);
-delay(150);
-TESTF=0;
-}
-myEsc.writeMicroseconds(1610);     // cde vitesse max 6 km/h pendant le virage - à ajuster sur piste
-}
+  if (d3 >= 300.) {
+    myEsc.writeMicroseconds(1635.);      // commande vitesse du tronçon avec l'asservissement
+    TESTF=1;
+  }
+  else {
+    if(TESTF == 1){
+      PwmVIT=1500.;
+      delay(500);
+      PwmVIT=1420;                              // impulsion marche AR pour freiner
+      myEsc.writeMicroseconds(PwmVIT);
+      delay(150);
+      TESTF=0;
+    }
+    myEsc.writeMicroseconds(1610);     // cde vitesse max 6 km/h pendant le virage - à ajuster sur piste
+  }
 }
 
+
 void debug() {
-Serial.print("dist d3 = ");
-Serial.print(d3);
-Serial.print("  dist d2 = ");
-Serial.print(d2);                             //affichage distance mesuré par le laser AV
-Serial.print("  dist d1 = ");
-Serial.print(d1);                             //affichage distance mesuré par le laser AR
-Serial.print("    alpha= ");
-Serial.print(alpha);                         //affichage angle
-Serial.print("    erreurs= ");
-Serial.print(erreurs);                         //affichage angle
+  Serial.print("dist d3 = ");
+  Serial.print(d3);
+  Serial.print("  dist d2 = ");
+  Serial.print(d2);                             //affichage distance mesuré par le laser AV
+  Serial.print("  dist d1 = ");
+  Serial.print(d1);                             //affichage distance mesuré par le laser AR
+  Serial.print("    alpha= ");
+  Serial.print(alpha);                         //affichage angle
+  Serial.print("    erreurs= ");
+  Serial.print(erreurs);                         //affichage angle
   //Serial.print(" Consigne km/h ");
   //Serial.print(consi);
   //Serial.print(" PWM ");
@@ -224,8 +236,8 @@ Serial.print(erreurs);                         //affichage angle
   //Serial.print(nb_pulses_sec_hall);
   //Serial.print("    vit km/h= ");
   //Serial.println(VIT);
-Serial.print(" BRAQUAGE ");
-Serial.print(angleBraq);
-Serial.print("    Distance parcourue cm: ");
-Serial.println(cumDist);
+  Serial.print(" BRAQUAGE ");
+  Serial.print(angleBraq);
+  Serial.print("    Distance parcourue cm: ");
+  Serial.println(cumDist);
 }
