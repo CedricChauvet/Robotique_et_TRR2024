@@ -1,4 +1,4 @@
-[https://www.youtube.com/watch?v=T-pdYhXsIUo]
+
 
 # Repo de l'equipe des cools
 ## Participants a la toulouse Robot Race (2018 - 2024)
@@ -40,6 +40,10 @@ Cette course est avant tout un moment de rencontre convivial et ludique entre pr
  - TRR Piéton : Cette fois-ci, les robots n’ont pas de roues mais deux appuis principaux au sol. Il doivent parcourir une longue ligne droite de 7m le plus rapidement possible.
  - TRR Multipatte : Pour les robots qui ne sont ni roulants, ni piétons, cette épreuve consiste aussi à parcourir 7m en ligne droite.
  - TRR Multipatte bis : Il s’agit de parcourir cette fois un tour du circuit de la Tiny TRR le plus rapidement possible. Épreuve spécialement dédiée aux quadrupèdes.
+
+
+
+https://github.com/CedricChauvet/Robotique_et_TRR2024/assets/16280142/2e0e8c0a-b0b7-449f-9335-838ba6f0f29c
 
 
 
