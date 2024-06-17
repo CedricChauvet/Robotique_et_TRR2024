@@ -1,5 +1,2 @@
 pour le truggy
-<figure class="video_container">
-  <iframe src="vid/test.mp4" frameborder="0"allowfullscreen="true">
-</iframe>
-</figure>
+[![Watch the video](https://github.com/CedricChauvet/Robotique_et_TRR2024/blob/main/Truggy/Copy%20of%20Video_piste_fablab_2%20(1).mp4)
