@@ -1,4 +1,6 @@
-pour le truggy
+ Truggy de Bernard, fabriqué en 2019,
+ Il a eu de nobmbreuses mises a jour et fonctionnalités.
+ Ci dessous la version caméra:
 ![Truggy](https://github.com/CedricChauvet/Robotique_et_TRR2024/assets/16280142/e587798a-a27f-499b-869e-5c0e25686b6e)
 
 
