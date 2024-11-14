@@ -15,7 +15,7 @@ Daniel Vaillant, informaticien specialiste des reseaux.
 
 Jean Claude Lecoules, ancien professeur et bricoleur génial.
 
-Cédric CHAUVET, devoloppeur python en formation machine learning.
+Cédric Chauvet, devoloppeur python en formation machine learning.
 
 depuis plus de 5 ans, nous nous démenons pour proposer des robots pour la Toulouse Robot Race.
 
