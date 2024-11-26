@@ -17,18 +17,27 @@ void setup() {
   pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
 }
 
+int angleBasG = 55;
+int angleHautG = 125;
+
 void loop() {
-//    for( int angle =0; angle<181; angle +=10){
-//      delay(50);
-//        pwm.setPWM(0, 0, angleToPulse(angle));
-//    }
- 
-  delay(2000);
+   for( int i =-15; i<15; i +=1){
+      delay(50);
+      pwm.setPWM(1, 0, angleToPulse(angleBasG+i));    
+      pwm.setPWM(3, 0, angleToPulse(angleHautG+i));
+   }
+   
+   for(int i =15; i>-15; i-=1){
+      delay(50);
+      pwm.setPWM(1, 0, angleToPulse(angleBasG+i));    
+      pwm.setPWM(3, 0, angleToPulse(angleHautG+i)); 
+   }
+ /* position de depart 30]
   pwm.setPWM(1, 0, angleToPulse(55));
-  pwm.setPWM(2, 0, angleToPulse(90));
   pwm.setPWM(3, 0, angleToPulse(125));
-  pwm.setPWM(4, 0, angleToPulse(90));
   delay(2000);
+*/
+
 }
 
 int angleToPulse(int ang){
