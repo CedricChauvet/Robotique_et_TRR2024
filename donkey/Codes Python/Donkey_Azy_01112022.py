@@ -1,5 +1,5 @@
 #CODE issu de Truggy_asservi_30_07_4.py,opérationnel, testé plusieurs fois en mars 2022,
-#simplifié au max. Calage nouvelle caméra PICAM (2) à 2 m avec baffle amovible et AC=30 cm
+#simplifié au max. Calage nouvelle caméra PICAM (2) à 2 m avec  AC=30 cm
 # champs caméra mesurés 60° et 53,396°, d'où radpix=0,0032 et epsilon=0,00388 en rd
 
 import matplotlib.pyplot as plt             # librairie de tracage de graphique
