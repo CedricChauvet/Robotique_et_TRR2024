@@ -9,10 +9,10 @@ Pour rendre le me marcheur debout droit:
 
 
 <ul>
-  <li>moteur 1 : 1500</li>
-  <li>moteur 2 : 1466</li>
-  <li>moteur 3 : 1430</li>
-  <li>moteur 4 : 1499</li>
+  <li>moteur 1 : 1453</li>
+  <li>moteur 2 : 1462</li>
+  <li>moteur 3 : 1431</li>
+  <li>moteur 4 : 1469</li>
 </ul>
 
 
