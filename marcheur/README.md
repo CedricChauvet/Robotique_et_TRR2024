@@ -5,7 +5,7 @@ Tout d'abord le josianne,
 et Nestor!
 
 
-Pour rendre le me marcheur debout droit:
+Pour rendre Nestor debout droit:
 
 
 <ul>
