@@ -68,7 +68,7 @@ void streamVideo(WiFiClient &client) {
   client.print(headers);
   
   // Tant que le client est connecté 
-  while (client.connected() {
+  while (client.connected()) {
     // Capture d'une image via la caméra
     camera_fb_t * fb = esp_camera_fb_get();
     if (!fb) {
