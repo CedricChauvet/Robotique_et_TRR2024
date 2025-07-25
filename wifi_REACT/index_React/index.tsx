@@ -38,6 +38,7 @@ function App() {
     <div style={{ fontFamily: "sans-serif", padding: "2rem" }}>
       <h1>Données en temps réel</h1>
       <div>Capteur : {data ?? "Connexion en cours…"}</div>
+
       <div style={{ marginTop: "1rem" }}>
         <input
           type="number"
@@ -45,6 +46,16 @@ function App() {
           onChange={(e) => setSpeed(parseInt(e.target.value, 10))}
         />
         <button onClick={sendSpeed}>Envoyer</button>
+      </div>
+
+      <div style={{ marginTop: "2rem" }}>
+        <h2>Flux vidéo</h2>
+        {/* Le flux vidéo MJPEG s’affiche ici */}
+        <img
+          src="http://192.168.1.156:80/stream"
+          alt="Flux vidéo ESP32-CAM"
+          style={{ width: "100%", maxWidth: 640 }}
+        />
       </div>
     </div>
   );
