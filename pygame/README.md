@@ -1,3 +1,10 @@
+# semble indiquer qu'indispensable pour faire marcher sur le laptop:
+
+netsh advfirewall firewall add rule name="Mosquitto MQTT IN" dir=in action=allow protocol=TCP localport=1883
+
+
+
+
 # 🦾 Robot Leg Kinematics - MQTT Control
 
 Simulation de cinématique inverse pour jambe de robot avec contrôle MQTT temps réel vers Arduino R4 WiFi.
