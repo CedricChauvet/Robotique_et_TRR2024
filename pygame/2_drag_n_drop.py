@@ -457,7 +457,6 @@ def draw_ui(screen, leg, font):
             color = WHITE
         surface = font.render(text, True, color)
         screen.blit(surface, (10, y_offset + i * 25))
-
 def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Cinematique Jambe de Robot - Controle IK + MQTT")
@@ -469,6 +468,10 @@ def main():
     
     # Creer la jambe
     leg = RobotLeg(*place_leg_at_cartesian(0, 179))
+    
+    # ✅ Compteur pour debug
+    msg_count = 0
+    last_report = pygame.time.get_ticks()
     
     running = True
     while running:
@@ -493,7 +496,6 @@ def main():
                     joints = leg.forward_kinematics()
                     leg.foot_x = joints[3][0]
                     leg.foot_y = joints[3][1]
-                    leg.publish_angles_mqtt()
                 
                 if event.key == pygame.K_p:
                     leg.animation_active = not leg.animation_active
@@ -556,26 +558,31 @@ def main():
                 new_theta1 = leg.theta1 + angular_speed
                 if new_theta1 < math.radians(90):
                     leg.theta1 = new_theta1
-                    leg.publish_angles_mqtt()
             if keys[pygame.K_w]:
                 leg.theta1 -= angular_speed
-                leg.publish_angles_mqtt()
             
             if keys[pygame.K_a]:
                 leg.theta2 += angular_speed
-                leg.publish_angles_mqtt()
             if keys[pygame.K_s]:
                 new_theta2 = leg.theta2 - angular_speed
                 if new_theta2 > 0:
                     leg.theta2 = new_theta2
-                    leg.publish_angles_mqtt()
             
             if keys[pygame.K_z]:
                 leg.theta3 += angular_speed
-                leg.publish_angles_mqtt()
             if keys[pygame.K_x]:
                 leg.theta3 -= angular_speed
-                leg.publish_angles_mqtt()
+        
+        # ✅✅✅ PUBLIER À CHAQUE FRAME (60 Hz) ✅✅✅
+        leg.publish_angles_mqtt()
+        msg_count += 1
+        
+        # ✅ Afficher stats toutes les secondes
+        now = pygame.time.get_ticks()
+        if now - last_report >= 1000:
+            print(f"📤 Python publie {msg_count} msg/sec")
+            msg_count = 0
+            last_report = now
         
         # Affichage
         screen.fill(BLACK)

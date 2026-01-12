@@ -21,7 +21,8 @@ float h  = 18.5; // hauteur du robot
 float l = 11.0; // longeur tibia considerant que les deux parties de la jambe aient meme longueur
 
 const float pi = 3.14159267;
-
+int angle_hanche = 35;
+ 
 void setup() {
   Serial.begin(9600);
   Serial.println("16 channel Servo test!");
@@ -31,7 +32,6 @@ void setup() {
   Serial.println(angleToPulse(p3+43.5));
     Serial.println("angletopulseArrivée:");
   Serial.println(angleToPulse(p3 +12.5));
- 
  
   pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
 }
@@ -66,6 +66,19 @@ void loop() {
    delay(5);
   }
 
+delay(1000);
+  
+   //pwm.setPWM(15, 0, angleToPulse(105));
+   //pwm.setPWM(14, 0, angleToPulse(90));
+
+for (int i = 0; i<15;i++){
+ pwm.setPWM(15, 0, angleToPulse(90)); 
+
+ pwm.setPWM(14, 0, angleToPulse(90-i));
+ delay(50);
+  }
+
+delay(1000);
 
   for(float alphaG = 40.0; alphaG > 15.0;  alphaG -= 0.10){
    // femur gauche
@@ -90,9 +103,20 @@ void loop() {
    delay(5);
   }
 
+
+   //pwm.setPWM(15, 0, angleToPulse(90));
+   //pwm.setPWM(14, 0, angleToPulse(75));
+
+delay(1000);
+for (int i = 0; i<25;i++){
+ pwm.setPWM(14, 0, angleToPulse(90)); 
+
+ pwm.setPWM(15, 0, angleToPulse(90+i));
+ delay(50);
+  }
+
+delay(1000);
 }
-
-
 int angleToPulse(float angle){
    
    // mapping de 0 a 180

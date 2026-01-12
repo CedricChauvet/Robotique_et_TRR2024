@@ -1,9 +1,12 @@
 #include <WiFiS3.h>
 #include <WebSocketsServer.h>
 
-const char* ssid = "Bbox-BFE7AC14";
-const char* password = "ITetudes.256";
+//const char* ssid = "Bbox-BFE7AC14";
+//const char* password = "ITetudes.256";
 
+const char* ssid = "Livebox-CD86";
+const char* password = "nLGMTzseTrWPmGcTdM";
+ 
 WebSocketsServer webSocket = WebSocketsServer(81);
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {

@@ -34,6 +34,13 @@ void setup() {
  
  
   pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
+
+   pwm.setPWM(1, 0, angleToPulse(p1-30)) ;      
+   pwm.setPWM(2, 0, angleToPulse(p2+30)) ;      
+   pwm.setPWM(3, 0, angleToPulse(p3+30)) ;      
+   pwm.setPWM(4, 0, angleToPulse(p4-30)); 
+   pwm.setPWM(8, 0, angleToPulse(90-20)); 
+   pwm.setPWM(9, 0, angleToPulse(90+20)); 
 }
 
 // calculée par l'exercice 3 de la documentation
@@ -41,10 +48,15 @@ void setup() {
 // tout en gardant une hauteur constante, voir calcul...
 
 void loop() {
-  pwm.setPWM(1, 0, angleToPulse(p1-30)) ;      
-  pwm.setPWM(2, 0, angleToPulse(p2+30)) ;      
-  pwm.setPWM(3, 0, angleToPulse(p3+30)) ;      
-  pwm.setPWM(4, 0, angleToPulse(p4-30)); 
+for (int i = 0; i<40;i++){
+ pwm.setPWM(8, 0, angleToPulse(90)); 
+
+ pwm.setPWM(9, 0, angleToPulse(90-i));
+ delay(50);
+  }
+
+delay(5000);
+
 }
 
 int angleToPulse(int angle){

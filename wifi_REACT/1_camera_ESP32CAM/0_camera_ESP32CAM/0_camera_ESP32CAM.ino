@@ -1,8 +1,11 @@
 #include "esp_camera.h"
 #include <WiFi.h>
 
-const char* ssid = "Bbox-BFE7AC14";
-const char* password = "ITetudes.256";
+//const char* ssid = "Bbox-BFE7AC14";
+//const char* password = "ITetudes.256";
+
+const char* ssid = "Livebox-CD86";
+const char* password = "nLGMTzseTrWPmGcTdM";
 
 
 // Configuration caméra AI Thinker (ESP32-CAM standard)
