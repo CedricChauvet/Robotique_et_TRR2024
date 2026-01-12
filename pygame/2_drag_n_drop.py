@@ -1,7 +1,7 @@
 """
 by ceed with claude
 """
-
+import time
 import pygame
 import math
 import sys
@@ -34,7 +34,7 @@ YELLOW = (255, 255, 0)
 GRAY = (150, 150, 150)
 
 # ==================== CONFIGURATION MQTT ====================
-MQTT_BROKER = "localhost"  # Pour les tests locaux
+MQTT_BROKER = "192.168.1.192"  # Pour les tests locaux
 MQTT_PORT = 1883
 MQTT_TOPIC_THETA1 = "robot/leg/theta1"
 MQTT_TOPIC_THETA2 = "robot/leg/theta2"
@@ -80,8 +80,7 @@ def pub(topic, value):
     global mqtt_client, mqtt_connected
     if mqtt_client and mqtt_connected and MQTT_ENABLED:
         try:
-          mqtt_client.publish(topic, value)
-
+          mqtt_client.publish(topic, value, qos=0, retain=False)
         except Exception as e:
             print(f"MQTT: Erreur publication: {e}")
 
@@ -587,6 +586,10 @@ def main():
             print(f"📤 Python publie {msg_count} msg/sec")
             msg_count = 0
             last_report = now
+        
+        #limitation des publications 
+        time.sleep(0.04)
+        
         
         # Affichage
         screen.fill(BLACK)
