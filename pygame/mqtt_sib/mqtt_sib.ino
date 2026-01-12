@@ -16,6 +16,7 @@ int port = 1883;
 WiFiClient wifiClient;
 MqttClient mqttClient(wifiClient);
 
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
@@ -30,11 +31,12 @@ void setup() {
   // WiFi
   Serial.print("Connexion WiFi");
   WiFi.begin(ssid, password);
+  
+  // Attendre connexion ET adresse IP valide
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\nWiFi OK");
   
   //  AUGMENTER LE BUFFER MQTT 
   mqttClient.setKeepAliveInterval(60000);
@@ -47,12 +49,13 @@ void setup() {
     Serial.println(mqttClient.connectError());
     while (1);
   }
-  Serial.println("MQTT OK");
   
   // S'abonner avec QoS 0 (pas de buffer)
   mqttClient.subscribe("jambe_G", 0);
   Serial.println("Abonné à jambe_G");
 }
+
+
 
 void loop() {
   //  Compteur de messages
@@ -62,6 +65,7 @@ void loop() {
   
   mqttClient.poll();
   
+  // Vérifier les messages
   int messageSize = mqttClient.parseMessage();
   if (messageSize) {
     msgCount++;
