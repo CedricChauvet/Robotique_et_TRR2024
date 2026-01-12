@@ -1,3 +1,7 @@
+"""
+by ceed with claude
+"""
+
 import pygame
 import math
 import sys
