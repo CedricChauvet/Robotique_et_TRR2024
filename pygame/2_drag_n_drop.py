@@ -588,7 +588,7 @@ def main():
             last_report = now
         
         #limitation des publications 
-        time.sleep(0.04)
+        time.sleep(0.02)
         
         
         # Affichage
