@@ -366,7 +366,7 @@ class RobotLeg:
         
         # Nouveau centre en coordonnées cartésienne
         center_x = 0  # ou self.origin en coordonnées cartésiennes si différent
-        center_y = 108  # vers le bas (y négatif en cartésien)
+        center_y = L1 + L2  # vers le bas (y négatif en cartésien)
 
         # Convertir en coordonnées écran
         screen_center = cartesian_to_screen(center_x, center_y)
