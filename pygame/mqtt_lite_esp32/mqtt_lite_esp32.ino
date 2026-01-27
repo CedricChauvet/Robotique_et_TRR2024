@@ -39,9 +39,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   
   // Comparaison de chaînes C (char*) - utiliser strcmp
-  if (strcmp(topic, jambe_G) == 0) {
+  if (strcmp(topic, "jambe_G") == 0) {
     one = "G";
-  } else if (strcmp(topic, jambe_D) == 0) {
+  } else if (strcmp(topic, "jambe_D") == 0) {
     one = "D";
   }
   
