@@ -15,7 +15,7 @@ int port = 1883;
 
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
-
+string one;
 float theta1 = 0;
 float theta2 = 0;
 float theta3 = 0;
@@ -38,18 +38,30 @@ void callback(char* topic, byte* payload, unsigned int length) {
     message += (char)payload[i];
   }
   
+  // Comparaison de chaînes C (char*) - utiliser strcmp
+  if (strcmp(topic, jambe_G) == 0) {
+    one = "G";
+  } else if (strcmp(topic, jambe_D) == 0) {
+    one = "D";
+  }
+  
   // Parser
   int idx1 = message.indexOf(',');
   int idx2 = message.indexOf(',', idx1 + 1);
+  int idx3 = message.indexOf(',', idx2 + 1);  // ✅ Corrigé: idx2 + 1
   
-  if (idx1 > 0 && idx2 > idx1) {
+  if (idx1 > 0 && idx2 > idx1 && idx3 > idx2) {  // ✅ Ajouté vérification idx3
     theta1 = message.substring(0, idx1).toFloat();
     theta2 = message.substring(idx1 + 1, idx2).toFloat();
-    theta3 = message.substring(idx2 + 1).toFloat();
+    theta3 = message.substring(idx2 + 1, idx3).toFloat();
+    yaw = message.substring(idx3 + 1).toFloat();
     
-    Serial.printf("Angles: %.1f, %.1f, %.1f\n", theta1, theta2, theta3);
+    // ✅ Corrigé: %s pour la chaîne, et ajouté %.1f pour yaw
+    Serial.printf("%s, Angles: %.1f, %.1f, %.1f, %.1f\n", one, theta1, theta2, theta3, yaw);
   }
 }
+
+
 
 bool checkI2C() {
   Wire.beginTransmission(0x40);
@@ -170,18 +182,23 @@ void loop() {
     }
     lastI2CCheck = millis();
   }
-  
-  // Update servos throttlé
-    Wire.beginTransmission(0x40);
-    if (Wire.endTransmission() == 0) {
-      int ms1 = constrain(map(theta1, -135, 135, 500, 2500), 500, 2500);
-      int ms2 = constrain(map(theta2, -135, 135, 500, 2500), 500, 2500);
-      int ms3 = constrain(map(theta3, -135, 135, 500, 2500), 500, 2500);
-      //Serial.println(ms2);
-      pwm.writeMicroseconds(0, ms1);
-      pwm.writeMicroseconds(1, ms2);
-      pwm.writeMicroseconds(2, ms3);
-    }
+    // Update servos throttlé
+  Wire.beginTransmission(0x40);
+  if (Wire.endTransmission() == 0) {
+    // Calculs communs (une seule fois)
+    int ms1 = constrain(map(theta1, -135, 135, 500, 2500), 500, 2500);
+    int ms2 = constrain(map(theta2, -135, 135, 500, 2500), 500, 2500);
+    int ms3 = constrain(map(theta3, -135, 135, 500, 2500), 500, 2500);
+    int ms4 = constrain(map(yaw, -135, 135, 500, 2500), 500, 2500);
+    
+    // Offset des canaux selon la jambe
+    int offset = (one == "G") ? 0 : 4;  // G = 0-3, D = 4-7
+    
+    pwm.writeMicroseconds(offset + 0, ms1);
+    pwm.writeMicroseconds(offset + 1, ms2);
+    pwm.writeMicroseconds(offset + 2, ms3);
+    pwm.writeMicroseconds(offset + 3, ms4);
+  }
     
     lastPWMUpdate = millis();
     delay(5);
