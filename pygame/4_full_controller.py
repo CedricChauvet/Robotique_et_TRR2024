@@ -1,6 +1,7 @@
 """
 by ced with claude
 """
+# ==================== IMPORTS ====================
 import time
 import pygame
 import math
@@ -20,10 +21,10 @@ Exemple : leg = RobotLeg(*place_leg_at_cartesian(0, 150))
 Place la hanche a X=0, Y=150 dans le repere cartesien
 """
 
-# Initialisation de Pygame
+# ==================== INITIALISATION PYGAME ====================
 pygame.init()
 
-# Constantes
+# ==================== CONSTANTES ====================
 WIDTH, HEIGHT = 1300, 1000
 FPS = 60
 WHITE = (255, 255, 255)
@@ -37,7 +38,6 @@ GRAY = (150, 150, 150)
 # ==================== CONFIGURATION MQTT ====================
 MQTT_BROKER = "192.168.1.192"  # Pour les tests locaux
 MQTT_PORT = 1883
-
 MQTT_ENABLED = False  # Activer/Desactiver avec la touche 'M'
 
 mqtt_client = None
@@ -90,7 +90,7 @@ def stop_mqtt():
         mqtt_client.loop_stop()
         mqtt_client.disconnect()
 
-# Parametres de la jambe de robot
+# ==================== PARAMETRES DE LA JAMBE ====================
 L1 = 54  # Longueur segment 1 (mm)
 L2 = 54  # Longueur segment 2 (mm)
 L3 = 71  # Longueur segment 3 (mm)
@@ -103,13 +103,13 @@ L1_DISPLAY = L1 * ZOOM_FACTOR
 L2_DISPLAY = L2 * ZOOM_FACTOR
 L3_DISPLAY = L3 * ZOOM_FACTOR
 
-# REPERE CARTESIEN (a configurer selon vos besoins)
+# ==================== REPERE CARTESIEN ====================
 REPERE_ORIGIN_X = 900  # Position X de l'origine du repere (en pixels ecran)
 REPERE_ORIGIN_Y = 400  # Position Y de l'origine du repere (en pixels ecran)
 REPERE_SCALE = ZOOM_FACTOR    # Echelle : 1.0 = 1 pixel ecran = 1 unite du repere
 # Note : En pygame, Y augmente vers le bas. Le repere cartesien aura Y vers le haut
 
-
+# ==================== FONCTIONS DE CONVERSION COORDONNEES ====================
 def screen_to_cartesian(screen_x, screen_y):
     """Convertit coordonnees ecran pygame vers coordonnees du repere cartesien (en mm)"""
     cart_x = (screen_x - REPERE_ORIGIN_X) / REPERE_SCALE  # en mm
@@ -129,6 +129,7 @@ def place_leg_at_cartesian(cart_x, cart_y):
     """
     return cartesian_to_screen(cart_x, cart_y)
 
+# ==================== FONCTION DE DESSIN GRILLE ====================
 def draw_cartesian_grid(screen):
     """Dessine le repere cartesien avec grille"""
     # Axes principaux
@@ -151,6 +152,7 @@ def draw_cartesian_grid(screen):
     label_origin = font_small.render("(0,0)", True, YELLOW)
     screen.blit(label_origin, (REPERE_ORIGIN_X + 10, REPERE_ORIGIN_Y + 5))
 
+# ==================== CLASSE ROBOT LEG ====================
 class RobotLeg:
     def __init__(self, origin_x, origin_y):
         self.origin = [origin_x, origin_y]
@@ -179,7 +181,6 @@ class RobotLeg:
         self.ellipse_radius_x = 100     # Grand rayon (horizontal) - plus grand
         self.ellipse_radius_y = 20      # Petit rayon (vertical) - plus petit
 
-
     def update_rectangle_corners(self):
         """Calcule les 4 coins du rectangle en mm"""
         half_w = self.rect_width / 2
@@ -191,7 +192,6 @@ class RobotLeg:
             (self.rect_center_x + half_w, self.rect_center_y - half_h),
             (self.rect_center_x - half_w, self.rect_center_y - half_h),
         ]
-    
 
     def get_ellipse_position(self, t):
         """Position sur l'ellipse (t entre 0 et 1)"""
@@ -205,7 +205,6 @@ class RobotLeg:
         y = self.ellipse_center_y + self.ellipse_radius_y * math.sin(angle)
         
         return cartesian_to_screen(x, y)
-    
         
     def forward_kinematics(self):
         """Calcule la position de chaque articulation (cinematique directe)
@@ -341,7 +340,6 @@ class RobotLeg:
     
     def draw_workspace(self, screen):
         """Dessine l'espace de travail de la jambe"""
-
         # Nouveau centre en coordonnées cartésienne
         center_x = 0  # ou self.origin en coordonnées cartésiennes si différent
         center_y = L1 + L2  # vers le bas (y négatif en cartésien)
@@ -351,7 +349,6 @@ class RobotLeg:
         
         # Dessiner les cercles avec le nouveau centre
         pygame.draw.circle(screen, GRAY, screen_center, int(L1_DISPLAY + L2_DISPLAY), 1)
-   
     
     def draw_ellipse_trajectory(self, screen):
         """Dessine la trajectoire elliptique horizontale"""
@@ -375,18 +372,14 @@ class RobotLeg:
         screen_center = cartesian_to_screen(self.ellipse_center_x, self.ellipse_center_y)
         pygame.draw.circle(screen, color, (int(screen_center[0]), int(screen_center[1])), 4)
 
-
+# ==================== FONCTION INTERFACE UTILISATEUR ====================
 def draw_ui(screen, leg_left, leg_right, timeline_yaw, font):
     """Affiche l'interface utilisateur"""
     joints = leg_left.forward_kinematics()
-    joints_right = leg_right.forward_kinematics()
     foot_pos = joints[3]
-    foot_right_pos = joints_right[3]
     
     # Convertir en coordonnees cartesiennes
     cart_x, cart_y = screen_to_cartesian(foot_pos[0], foot_pos[1])
-    cart_right_x, cart_right_y = screen_to_cartesian(foot_right_pos[0], foot_right_pos[1])
-    
     hip_cart_x, hip_cart_y = screen_to_cartesian(leg_left.origin[0], leg_left.origin[1])
     
     # Statut MQTT
@@ -415,25 +408,19 @@ def draw_ui(screen, leg_left, leg_right, timeline_yaw, font):
         "Point VERT = Jambe principale | Point ROUGE = Jambe opposée",
         "",
         f"Hanche (repere): X={hip_cart_x:.1f}mm  Y={hip_cart_y:.1f}mm",
-        f"Pied Gauche (repere): X={cart_x:.1f}mm  Y={cart_y:.1f}mm",
-        f"Pied Droit (repere): X={cart_right_x:.1f}mm  Y={cart_right_y:.1f}mm",
+        f"Pied (repere): X={cart_x:.1f}mm  Y={cart_y:.1f}mm",
         "",
         f"theta1 (Segment 1): {math.degrees(leg_left.theta1):7.1f}° ",
         f"theta2 (Segment 2): {math.degrees(leg_left.theta2):7.1f}° ",
         f"theta3 (Segment 3): {math.degrees(leg_left.theta3):7.1f}°",
         f"yaw_left: {timeline_yaw.get_current_angle():7.1f}°",
         "",
-
         f"Dtheta1 (Segment 1): {math.degrees(leg_right.theta1):7.1f}° ",
         f"Dtheta2 (Segment 2): {math.degrees(leg_right.theta2):7.1f}° ",
         f"Dtheta3 (Segment 3): {math.degrees(leg_right.theta3):7.1f}°",
         f"yaw_right: {timeline_yaw.get_opposite_angle():7.1f}°",
         "",
-
-
-
         f"Dimensions reelles: L1={L1}mm | L2={L2}mm | L3={L3}mm",
-        
     ]
     
     # Ajouter les contrôles angulaires si en mode angulaire
@@ -466,6 +453,7 @@ def draw_ui(screen, leg_left, leg_right, timeline_yaw, font):
         surface = font.render(text, True, color)
         screen.blit(surface, (10, y_offset + i * 25))
 
+# ==================== FONCTION PRINCIPALE ====================
 def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Cinematique Jambe de Robot - IK + MQTT + Timeline Synchronisée")
@@ -475,38 +463,43 @@ def main():
     # Initialiser MQTT
     init_mqtt()
     
-    # Créer les DEUX jambes (calculs pour MQTT)
+    # ========== CREATION DES JAMBES ==========
     # Jambe GAUCHE (visible, centrée, phase 0)
     leg_left = RobotLeg(*place_leg_at_cartesian(0, 179))
     
     # Jambe DROITE (virtuelle, décalée, phase +0.5) - Pour calculs MQTT uniquement
     leg_right = RobotLeg(*place_leg_at_cartesian(160, 179))
     
-    # Créer UNE timeline pour 2 servos (yaw gauche et droite)
+    # ========== CREATION TIMELINE ==========
     timeline_yaw = ServoTimeline(
-        position=(600, 600),     # En bas de l'écran
-        size=(600, 300),        # Timeline horizontale
-        angle_range=(-60, 60),  # Limites d'angle
+        position=(600, 600),
+        size=(600, 300),
+        angle_range=(-60, 60),
         duration=leg_left.animation_duration,
-      # Même durée que l'ellipse pour synchronisation
     )
     timeline_yaw.keyframes = [
-            Keyframe(0.0, 0),
-            Keyframe(0.5, 20),
-            Keyframe(1.0, 0)
-        ]   
+        Keyframe(0.0, 0),
+        Keyframe(0.5, 20),
+        Keyframe(1.0, 0)
+    ]
+    
+    # ========== CREATION BOUTONS UI ==========
+    # Boutons durée
     btn_decrease = pygame.Rect(20, HEIGHT - 80, 40, 40)
     btn_increase = pygame.Rect(70, HEIGHT - 80, 40, 40)
-
+    
+    # Boutons rayon ellipse
     btn_radius_decrease = pygame.Rect(140, HEIGHT - 80, 40, 40)
     btn_radius_increase = pygame.Rect(190, HEIGHT - 80, 40, 40)
 
-    # Compteur pour debug
+    # ========== VARIABLES DE CONTROLE ==========
     msg_count = 0
     last_report = pygame.time.get_ticks()
     global toggle
     toggle = False
     running = True
+    
+    # ==================== BOUCLE PRINCIPALE ====================
     while running:
         # ========== GESTION DES ÉVÉNEMENTS ==========
         for event in pygame.event.get():
@@ -516,26 +509,23 @@ def main():
             # Flag pour savoir si on doit passer l'événement à la timeline
             pass_to_timeline = True
             
+            # ========== GESTION CLAVIER ==========
             if event.type == pygame.KEYDOWN:
-                # ESPACE : Lancer/Arrêter les animations synchronisées (Timeline + Ellipse)
+                # ESPACE : Lancer/Arrêter les animations synchronisées
                 if event.key == pygame.K_SPACE:
-                    # Toggle les deux animations ensemble
                     timeline_yaw.is_playing = not timeline_yaw.is_playing
-                    leg_left.animation_active = timeline_yaw.is_playing
                     leg_left.animation_active = timeline_yaw.is_playing
                     leg_right.animation_active = timeline_yaw.is_playing
                     
                     if timeline_yaw.is_playing:
-                        # Reprendre là où on s'est arrêté (ne pas remettre à 0)
                         timeline_yaw.start_time = pygame.time.get_ticks() - timeline_yaw.current_time * timeline_yaw.duration * 1000
-                        leg_left.control_mode = "cartesian"
                         leg_left.control_mode = "cartesian"
                         leg_right.control_mode = "cartesian"
                         print(f"Animations synchronisées: REPRISES à t={timeline_yaw.current_time:.2f}")
                     else:
                         print(f"Animations synchronisées: ARRÊTÉES à t={timeline_yaw.current_time:.2f}")
                     
-                    pass_to_timeline = False  # Ne pas passer ESPACE à la timeline
+                    pass_to_timeline = False
                 
                 # R : Reset tout
                 elif event.key == pygame.K_r:
@@ -555,10 +545,7 @@ def main():
                     leg_right.foot_x = joints_right[3][0]
                     leg_right.foot_y = joints_right[3][1]
                     
-                    # Reset référence
-                    leg = leg_left
-                    
-                    # Reset aussi les animations à 0
+                    # Reset animations
                     timeline_yaw.current_time = 0.0
                     timeline_yaw.is_playing = False
                     leg_left.animation_time = 0.0
@@ -583,8 +570,6 @@ def main():
                         leg_right.foot_x = joints_right[3][0]
                         leg_right.foot_y = joints_right[3][1]
                     
-                    # Mettre à jour la référence
-                    leg_left.control_mode = leg_left.control_mode
                     pass_to_timeline = False
                 
                 # M : MQTT
@@ -594,14 +579,15 @@ def main():
                     print(f"MQTT: {'ACTIVE' if MQTT_ENABLED else 'INACTIVE'}")
                     pass_to_timeline = False
             
-            # Gestion des événements de la timeline (sauf touches spéciales)
+            # Gestion des événements de la timeline
             if pass_to_timeline:
                 timeline_yaw.handle_event(event)
             
+            # ========== GESTION SOURIS ==========
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
 
-                # Bouton diminuer durée
+                # Boutons durée
                 if btn_decrease.collidepoint(mouse_pos):
                     new_duration = max(1.0, leg_left.animation_duration - 0.25)
                     leg_left.animation_duration = new_duration
@@ -609,7 +595,6 @@ def main():
                     timeline_yaw.duration = new_duration
                     print(f"Durée: {new_duration:.2f}s")
                 
-                # Bouton augmenter durée
                 elif btn_increase.collidepoint(mouse_pos):
                     new_duration = min(30.0, leg_left.animation_duration + 0.25)
                     leg_left.animation_duration = new_duration
@@ -617,21 +602,20 @@ def main():
                     timeline_yaw.duration = new_duration
                     print(f"Durée: {new_duration:.2f}s")
 
-                #  Bouton diminuer rayon X
+                # Boutons rayon
                 elif btn_radius_decrease.collidepoint(mouse_pos):
                     new_radius = max(20, leg_left.ellipse_radius_x - 1)
                     leg_left.ellipse_radius_x = new_radius
                     leg_right.ellipse_radius_x = new_radius
                     print(f"Rayon X: {new_radius}mm")
                 
-                #  Bouton augmenter rayon X
                 elif btn_radius_increase.collidepoint(mouse_pos):
                     new_radius = min(200, leg_left.ellipse_radius_x + 1)
                     leg_left.ellipse_radius_x = new_radius
                     leg_right.ellipse_radius_x = new_radius
                     print(f"Rayon X: {new_radius}mm")
 
-
+                # Drag & Drop du pied
                 if leg_left.control_mode == "cartesian":
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     if leg_left.is_near_foot(mouse_x, mouse_y):
@@ -648,38 +632,37 @@ def main():
                     leg_left.inverse_kinematics_foot(mouse_x, mouse_y)
         
         # ========== MISE À JOUR ==========
-        # Mise à jour de la timeline
         timeline_yaw.update()
         
-        # ✅ SYNCHRONISER le temps de l'ellipse avec la timeline
+        # Synchroniser le temps de l'ellipse avec la timeline
         if leg_left.animation_active and timeline_yaw.is_playing:
             leg_left.animation_time = timeline_yaw.current_time * leg_left.animation_duration
-            leg_left.animation_time = leg_left.animation_time
             leg_right.animation_time = leg_left.animation_time
         
         # Récupérer les angles des servos yaw
         yaw_left = timeline_yaw.get_current_angle()
         yaw_right = timeline_yaw.get_opposite_angle()
         
-        # Controles clavier
+        # ========== CONTROLES CLAVIER CONTINUS ==========
         keys = pygame.key.get_pressed()
         
         # Animation ellipse (synchronisée avec la timeline)
         if leg_left.animation_active:
             t = leg_left.animation_time / leg_left.animation_duration
             
-            # JAMBE GAUCHE : suit l'ellipse au temps t
+            # JAMBE GAUCHE
             target_x_left, target_y_left = leg_left.get_ellipse_position(t)
             leg_left.inverse_kinematics_foot(target_x_left, target_y_left)
             
-            # JAMBE DROITE : suit l'ellipse au temps (t + 0.5) en OPPOSITION
+            # JAMBE DROITE (opposition de phase)
             t_right = (t + 0.5) % 1.0
             target_x_right, target_y_right = leg_right.get_ellipse_position(t_right)
             leg_right.inverse_kinematics_foot(target_x_right, target_y_right)
         
+        # Mode cartésien : contrôle avec flèches
         elif leg_left.control_mode == "cartesian":        
             speed = 1.0 
-        
+            
             leg = leg_left
             if keys[pygame.K_f]:
                 toggle = not toggle
@@ -698,8 +681,9 @@ def main():
             if keys[pygame.K_DOWN]:
                 leg.foot_y += speed
             
-            leg.inverse_kinematics_foot(leg_left.foot_x, leg_left.foot_y)
-            
+            leg.inverse_kinematics_foot(leg.foot_x, leg.foot_y)
+        
+        # Mode angulaire : contrôle direct des angles
         else:
             angular_speed = 0.02
             
@@ -722,7 +706,7 @@ def main():
             if keys[pygame.K_x]:
                 leg_left.theta3 -= angular_speed
         
-        
+        # ========== PUBLICATION MQTT ==========
         # Jambe GAUCHE
         t1_deg_left = math.degrees(leg_left.theta1)
         t2_deg_left = math.degrees(leg_left.theta2)
@@ -741,7 +725,7 @@ def main():
 
         msg_count += 1
         
-        # Afficher stats toutes les secondes
+        # Stats MQTT
         now = pygame.time.get_ticks()
         if now - last_report >= 1000:
             print(f"📤 Python publie {msg_count} msg/sec")
@@ -749,14 +733,35 @@ def main():
             last_report = now
         
         # Limitation des publications 
-        time.sleep(0.02)
+        #time.sleep(0.02)
         
         # ========== AFFICHAGE ==========
         screen.fill([200, 200, 200])
         
+        # ========== DESSIN GRILLE ET WORKSPACE ==========
         draw_cartesian_grid(screen)
+        leg_left.draw_workspace(screen)
+        leg_left.draw_ellipse_trajectory(screen)
         
-        # Gestion du curseur
+        # ========== DESSIN POINTS SUR ELLIPSE ==========
+        if leg_left.animation_active:
+            t = leg_left.animation_time / leg_left.animation_duration
+            
+            # Point ROUGE (jambe droite, opposition)
+            t_right = (t + 0.5) % 1.0
+            target_x_right, target_y_right = leg_right.get_ellipse_position(t_right)
+            pygame.draw.circle(screen, RED, (int(target_x_right), int(target_y_right)), 12, 3)
+            pygame.draw.circle(screen, RED, (int(target_x_right), int(target_y_right)), 6)
+            
+            # Point VERT (jambe gauche, principale)
+            target_x_left, target_y_left = leg_left.get_ellipse_position(t)
+            pygame.draw.circle(screen, GREEN, (int(target_x_left), int(target_y_left)), 12, 3)
+            pygame.draw.circle(screen, GREEN, (int(target_x_left), int(target_y_left)), 6)
+        
+        # ========== DESSIN JAMBES ==========
+        leg_left.draw(screen)
+        
+        # ========== GESTION CURSEUR ==========
         if leg_left.control_mode == "cartesian":
             mouse_x, mouse_y = pygame.mouse.get_pos()
             if leg_left.is_near_foot(mouse_x, mouse_y):
@@ -766,27 +771,8 @@ def main():
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         
-        leg_left.draw_workspace(screen)
-        leg_left.draw_ellipse_trajectory(screen)
-        
-        # Dessiner un POINT ROUGE sur l'ellipse en opposition (jambe droite virtuelle)
-        if leg_left.animation_active:
-            t = leg_left.animation_time / leg_left.animation_duration
-            t_right = (t + 0.5) % 1.0
-            target_x_right, target_y_right = leg_right.get_ellipse_position(t_right)
-            pygame.draw.circle(screen, RED, (int(target_x_right), int(target_y_right)), 12, 3)
-            pygame.draw.circle(screen, RED, (int(target_x_right), int(target_y_right)), 6)
-            
-            # Dessiner un POINT VERT sur l'ellipse pour la jambe principale
-            target_x_left, target_y_left = leg_left.get_ellipse_position(t)
-            pygame.draw.circle(screen, GREEN, (int(target_x_left), int(target_y_left)), 12, 3)
-            pygame.draw.circle(screen, GREEN, (int(target_x_left), int(target_y_left)), 6)
-        
-        # Dessiner seulement la JAMBE GAUCHE
-        leg_left.draw(screen)
-        
+        # ========== DESSIN INDICATEURS PIED ==========
         if leg_left.control_mode == "cartesian":
-            # Dessiner les indicateurs pour la JAMBE (gauche visible)
             joints_left = leg_left.forward_kinematics()
             foot_pos_left = joints_left[3]
             if leg_left.dragging:
@@ -796,18 +782,14 @@ def main():
                 pygame.draw.circle(screen, GREEN, (int(foot_pos_left[0]), int(foot_pos_left[1])), 15, 2)
                 pygame.draw.circle(screen, GREEN, (int(foot_pos_left[0]), int(foot_pos_left[1])), 20, 1)
         
+        # ========== DESSIN INTERFACE UTILISATEUR ==========
         draw_ui(screen, leg_left, leg_right, timeline_yaw, font)
         
-        # ✅ FOND BLANC POUR LA TIMELINE (évite le clignotement)
-        timeline_bg = pygame.Rect(40, 590, 620, 170)  # Un peu plus grand que la timeline
-        #pygame.draw.rect(screen, WHITE, timeline_bg)
-        #pygame.draw.rect(screen, BLACK, timeline_bg, 2)  # Bordure noire
-        
-        # Dessiner la timeline
+        # ========== DESSIN TIMELINE ==========
         timeline_yaw.draw(screen)
         
-
-        # Titre au-dessus du rectangle
+        # ========== DESSIN CONTROLES DURATION TIME ==========
+        # Titre
         title_text = font.render("Duration time", True, BLACK)
         screen.blit(title_text, (10, HEIGHT - 110))
 
@@ -832,13 +814,12 @@ def main():
         plus_text = font.render("+", True, WHITE)
         screen.blit(plus_text, (btn_increase.centerx - 4, btn_increase.centery - 9))
 
-
-
-        # Titre Ellipse Radius X
+        # ========== DESSIN CONTROLES ELLIPSE RADIUS X ==========
+        # Titre
         radius_title_text = font.render("Ellipse Radius X", True, BLACK)
         screen.blit(radius_title_text, (130, HEIGHT - 110))
 
-        # Fond du rectangle rayon
+        # Fond
         radius_bg = pygame.Rect(130, HEIGHT - 90, 110, 90)
         pygame.draw.rect(screen, WHITE, radius_bg)
         pygame.draw.rect(screen, BLACK, radius_bg, 2)
@@ -847,27 +828,27 @@ def main():
         radius_text = font.render(f"{leg_left.ellipse_radius_x:.0f}mm", True, BLACK)
         screen.blit(radius_text, (145, HEIGHT - 30))
 
-        # Bouton diminuer rayon (-)
+        # Bouton diminuer (-)
         pygame.draw.rect(screen, (200, 100, 100), btn_radius_decrease)
         pygame.draw.rect(screen, BLACK, btn_radius_decrease, 2)
         minus_radius = font.render("-", True, WHITE)
         screen.blit(minus_radius, (btn_radius_decrease.centerx - 4, btn_radius_decrease.centery - 9))
 
-        # Bouton augmenter rayon (+)
+        # Bouton augmenter (+)
         pygame.draw.rect(screen, (100, 200, 100), btn_radius_increase)
         pygame.draw.rect(screen, BLACK, btn_radius_increase, 2)
         plus_radius = font.render("+", True, WHITE)
         screen.blit(plus_radius, (btn_radius_increase.centerx - 4, btn_radius_increase.centery - 9))
 
-
-
+        # ========== RAFRAICHISSEMENT ECRAN ==========
         pygame.display.flip()
-
         clock.tick(FPS)
     
+    # ========== ARRET PROPRE ==========
     stop_mqtt()
     pygame.quit()
     sys.exit()
 
+# ==================== POINT D'ENTREE ====================
 if __name__ == "__main__":
     main()
