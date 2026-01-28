@@ -6,7 +6,7 @@ import pygame
 import math
 import sys
 import paho.mqtt.client as mqtt
-from servo_timeline import ServoTimeline
+from servo_timeline import *
 
 """
 LOGICIEL DE CINEMATIQUE EMBARQUEE - JAMBE DE ROBOT
@@ -379,10 +379,14 @@ class RobotLeg:
 def draw_ui(screen, leg_left, leg_right, timeline_yaw, font):
     """Affiche l'interface utilisateur"""
     joints = leg_left.forward_kinematics()
+    joints_right = leg_right.forward_kinematics()
     foot_pos = joints[3]
+    foot_right_pos = joints_right[3]
     
     # Convertir en coordonnees cartesiennes
     cart_x, cart_y = screen_to_cartesian(foot_pos[0], foot_pos[1])
+    cart_right_x, cart_right_y = screen_to_cartesian(foot_right_pos[0], foot_right_pos[1])
+    
     hip_cart_x, hip_cart_y = screen_to_cartesian(leg_left.origin[0], leg_left.origin[1])
     
     # Statut MQTT
@@ -411,7 +415,8 @@ def draw_ui(screen, leg_left, leg_right, timeline_yaw, font):
         "Point VERT = Jambe principale | Point ROUGE = Jambe opposée",
         "",
         f"Hanche (repere): X={hip_cart_x:.1f}mm  Y={hip_cart_y:.1f}mm",
-        f"Pied (repere): X={cart_x:.1f}mm  Y={cart_y:.1f}mm",
+        f"Pied Gauche (repere): X={cart_x:.1f}mm  Y={cart_y:.1f}mm",
+        f"Pied Droit (repere): X={cart_right_x:.1f}mm  Y={cart_right_y:.1f}mm",
         "",
         f"theta1 (Segment 1): {math.degrees(leg_left.theta1):7.1f}° ",
         f"theta2 (Segment 2): {math.degrees(leg_left.theta2):7.1f}° ",
@@ -482,9 +487,19 @@ def main():
         position=(600, 600),     # En bas de l'écran
         size=(600, 300),        # Timeline horizontale
         angle_range=(-60, 60),  # Limites d'angle
-        duration=leg_left.animation_duration            # Même durée que l'ellipse pour synchronisation
+        duration=leg_left.animation_duration,
+      # Même durée que l'ellipse pour synchronisation
     )
-    
+    timeline_yaw.keyframes = [
+            Keyframe(0.0, 0),
+            Keyframe(0.5, 20),
+            Keyframe(1.0, 0)
+        ]   
+    btn_decrease = pygame.Rect(20, HEIGHT - 80, 40, 40)
+    btn_increase = pygame.Rect(70, HEIGHT - 80, 40, 40)
+
+    btn_radius_decrease = pygame.Rect(140, HEIGHT - 80, 40, 40)
+    btn_radius_increase = pygame.Rect(190, HEIGHT - 80, 40, 40)
 
     # Compteur pour debug
     msg_count = 0
@@ -584,6 +599,39 @@ def main():
                 timeline_yaw.handle_event(event)
             
             if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+
+                # Bouton diminuer durée
+                if btn_decrease.collidepoint(mouse_pos):
+                    new_duration = max(1.0, leg_left.animation_duration - 0.25)
+                    leg_left.animation_duration = new_duration
+                    leg_right.animation_duration = new_duration
+                    timeline_yaw.duration = new_duration
+                    print(f"Durée: {new_duration:.2f}s")
+                
+                # Bouton augmenter durée
+                elif btn_increase.collidepoint(mouse_pos):
+                    new_duration = min(30.0, leg_left.animation_duration + 0.25)
+                    leg_left.animation_duration = new_duration
+                    leg_right.animation_duration = new_duration
+                    timeline_yaw.duration = new_duration
+                    print(f"Durée: {new_duration:.2f}s")
+
+                #  Bouton diminuer rayon X
+                elif btn_radius_decrease.collidepoint(mouse_pos):
+                    new_radius = max(20, leg_left.ellipse_radius_x - 1)
+                    leg_left.ellipse_radius_x = new_radius
+                    leg_right.ellipse_radius_x = new_radius
+                    print(f"Rayon X: {new_radius}mm")
+                
+                #  Bouton augmenter rayon X
+                elif btn_radius_increase.collidepoint(mouse_pos):
+                    new_radius = min(200, leg_left.ellipse_radius_x + 1)
+                    leg_left.ellipse_radius_x = new_radius
+                    leg_right.ellipse_radius_x = new_radius
+                    print(f"Rayon X: {new_radius}mm")
+
+
                 if leg_left.control_mode == "cartesian":
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     if leg_left.is_near_foot(mouse_x, mouse_y):
@@ -758,7 +806,63 @@ def main():
         # Dessiner la timeline
         timeline_yaw.draw(screen)
         
+
+        # Titre au-dessus du rectangle
+        title_text = font.render("Duration time", True, BLACK)
+        screen.blit(title_text, (10, HEIGHT - 110))
+
+        # Fond
+        duration_bg = pygame.Rect(10, HEIGHT - 90, 110, 90)
+        pygame.draw.rect(screen, WHITE, duration_bg)
+        pygame.draw.rect(screen, BLACK, duration_bg, 2)
+
+        # Texte durée
+        duration_text = font.render(f"{leg_left.animation_duration:.2f}s", True, BLACK)
+        screen.blit(duration_text, (25, HEIGHT - 30))
+
+        # Bouton diminuer (-)
+        pygame.draw.rect(screen, (200, 100, 100), btn_decrease)
+        pygame.draw.rect(screen, BLACK, btn_decrease, 2)
+        minus_text = font.render("-", True, WHITE)
+        screen.blit(minus_text, (btn_decrease.centerx - 4, btn_decrease.centery - 9))
+
+        # Bouton augmenter (+)
+        pygame.draw.rect(screen, (100, 200, 100), btn_increase)
+        pygame.draw.rect(screen, BLACK, btn_increase, 2)
+        plus_text = font.render("+", True, WHITE)
+        screen.blit(plus_text, (btn_increase.centerx - 4, btn_increase.centery - 9))
+
+
+
+        # Titre Ellipse Radius X
+        radius_title_text = font.render("Ellipse Radius X", True, BLACK)
+        screen.blit(radius_title_text, (130, HEIGHT - 110))
+
+        # Fond du rectangle rayon
+        radius_bg = pygame.Rect(130, HEIGHT - 90, 110, 90)
+        pygame.draw.rect(screen, WHITE, radius_bg)
+        pygame.draw.rect(screen, BLACK, radius_bg, 2)
+
+        # Texte rayon
+        radius_text = font.render(f"{leg_left.ellipse_radius_x:.0f}mm", True, BLACK)
+        screen.blit(radius_text, (145, HEIGHT - 30))
+
+        # Bouton diminuer rayon (-)
+        pygame.draw.rect(screen, (200, 100, 100), btn_radius_decrease)
+        pygame.draw.rect(screen, BLACK, btn_radius_decrease, 2)
+        minus_radius = font.render("-", True, WHITE)
+        screen.blit(minus_radius, (btn_radius_decrease.centerx - 4, btn_radius_decrease.centery - 9))
+
+        # Bouton augmenter rayon (+)
+        pygame.draw.rect(screen, (100, 200, 100), btn_radius_increase)
+        pygame.draw.rect(screen, BLACK, btn_radius_increase, 2)
+        plus_radius = font.render("+", True, WHITE)
+        screen.blit(plus_radius, (btn_radius_increase.centerx - 4, btn_radius_increase.centery - 9))
+
+
+
         pygame.display.flip()
+
         clock.tick(FPS)
     
     stop_mqtt()

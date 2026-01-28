@@ -124,7 +124,8 @@ class ServoTimeline:
         # Fond de la timeline
         #pygame.draw.rect(screen, WHITE, self.timeline_rect)
         #pygame.draw.rect(screen, BLACK, self.timeline_rect, 2)
-        
+        font_label = pygame.font.Font(None, 20)
+
         # Grille horizontale (angles)
         num_h_lines = 6
         for i in range(num_h_lines + 1):
@@ -164,8 +165,7 @@ class ServoTimeline:
             
             if len(points) > 1:
                 pygame.draw.lines(screen, BLUE, False, points, 2)
-        
-        # Keyframes
+                
         for i, kf in enumerate(self.keyframes):
             x = self.time_to_x(kf.time)
             y = self.angle_to_y(kf.angle)
@@ -175,7 +175,20 @@ class ServoTimeline:
             
             pygame.draw.circle(screen, color, (int(x), int(y)), size)
             pygame.draw.circle(screen, BLACK, (int(x), int(y)), size, 2)
-        
+
+            # ✅ Label au-dessus du keyframe
+            label_text = f"({kf.time:.2f}, {kf.angle:.1f}°)"
+            label_surface = font_label.render(label_text, True, (255, 100, 0))
+            label_rect = label_surface.get_rect(center=(int(x), int(y) - 20))
+            
+            # Fond blanc pour meilleure lisibilité
+            bg_rect = label_rect.inflate(4, 2)
+            pygame.draw.rect(screen, (255, 255, 255), bg_rect)
+            pygame.draw.rect(screen, (0, 0, 0), bg_rect, 1)
+            
+            # Afficher le label
+            screen.blit(label_surface, label_rect)
+
         # Tangentes
         if self.show_tangents:
             for kf in sorted_kf:
