@@ -738,6 +738,11 @@ def main():
         # ========== AFFICHAGE ==========
         screen.fill([200, 200, 200])
         
+        # ========== AFFICHAGE FPS ==========
+        actual_fps = clock.get_fps()
+        fps_text = font.render(f"FPS: {actual_fps:.1f}", True, RED)
+        screen.blit(fps_text, (WIDTH - 120, 10))
+
         # ========== DESSIN GRILLE ET WORKSPACE ==========
         draw_cartesian_grid(screen)
         leg_left.draw_workspace(screen)

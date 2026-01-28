@@ -2,6 +2,8 @@
 Module Timeline pour Servomoteur - Contrôle de trajectoire
 Par Ced avec Claude
 Usage: from servo_timeline import ServoTimeline
+
+VERSION OPTIMISÉE - Cache de spline pour performances
 """
 
 import pygame
@@ -64,6 +66,10 @@ class ServoTimeline:
         
         # Font
         self.font_small = pygame.font.Font(None, 20)
+        
+        # ✅ OPTIMISATION : Cache pour la spline
+        self._spline_cache = None
+        self._keyframes_hash = None
     
     def get_current_angle(self):
         """Retourne l'angle actuel interpolé"""
@@ -73,6 +79,26 @@ class ServoTimeline:
         """Retourne l'angle en opposition de phase (+0.5)"""
         opposite_time = (self.current_time + 0.5) % 1.0
         return self.interpolate_angle(opposite_time)
+    
+    def _get_cached_spline(self):
+        """Retourne la spline (avec cache pour éviter recalculs)"""
+        # Calculer un hash des keyframes pour détecter les changements
+        sorted_kf = sorted(self.keyframes, key=lambda k: k.time)
+        current_hash = tuple((kf.time, kf.angle) for kf in sorted_kf)
+        
+        # Si les keyframes ont changé, recalculer la spline
+        if current_hash != self._keyframes_hash:
+            if len(sorted_kf) < 2:
+                self._spline_cache = None
+            else:
+                times = np.array([kf.time for kf in sorted_kf])
+                angles = np.array([kf.angle for kf in sorted_kf])
+                derivatives = np.zeros(len(times))
+                self._spline_cache = CubicHermiteSpline(times, angles, derivatives)
+            
+            self._keyframes_hash = current_hash
+        
+        return self._spline_cache
     
     def interpolate_angle(self, time):
         """Interpolation par spline cubique avec dérivées nulles aux keyframes"""
@@ -86,15 +112,10 @@ class ServoTimeline:
         if time >= sorted_kf[-1].time:
             return sorted_kf[-1].angle
         
-        # Extraire les temps et angles
-        times = np.array([kf.time for kf in sorted_kf])
-        angles = np.array([kf.angle for kf in sorted_kf])
-        
-        # Dérivées nulles à tous les keyframes
-        derivatives = np.zeros(len(times))
-        
-        # Créer la spline cubique de Hermite
-        spline = CubicHermiteSpline(times, angles, derivatives)
+        # ✅ OPTIMISATION : Utiliser le cache au lieu de recalculer
+        spline = self._get_cached_spline()
+        if spline is None:
+            return 0
         
         # Évaluer la spline au temps donné
         return float(spline(time))
@@ -152,20 +173,24 @@ class ServoTimeline:
             label = self.font_small.render(f"{time:.1f}", True, BLACK)
             screen.blit(label, (x - 15, self.timeline_rect.bottom + 5))
         
-        # Courbe d'interpolation
+        # ✅ OPTIMISATION : Courbe d'interpolation avec moins de points
         sorted_kf = sorted(self.keyframes, key=lambda k: k.time)
         if len(sorted_kf) >= 2:
             points = []
-            for i in range(self.timeline_rect.width):
-                t = i / self.timeline_rect.width
+            # Dessiner max 200 points au lieu de timeline_rect.width (600)
+            num_points = min(100, self.timeline_rect.width)
+            
+            for i in range(num_points):
+                t = i / (num_points - 1) if num_points > 1 else 0
                 angle = self.interpolate_angle(t)
-                x = self.timeline_rect.left + i
+                x = self.timeline_rect.left + t * self.timeline_rect.width
                 y = self.angle_to_y(angle)
                 points.append((x, y))
             
             if len(points) > 1:
                 pygame.draw.lines(screen, BLUE, False, points, 2)
-                
+        
+        # Keyframes
         for i, kf in enumerate(self.keyframes):
             x = self.time_to_x(kf.time)
             y = self.angle_to_y(kf.angle)
@@ -176,7 +201,7 @@ class ServoTimeline:
             pygame.draw.circle(screen, color, (int(x), int(y)), size)
             pygame.draw.circle(screen, BLACK, (int(x), int(y)), size, 2)
 
-            # ✅ Label au-dessus du keyframe
+            # Label au-dessus du keyframe
             label_text = f"({kf.time:.2f}, {kf.angle:.1f}°)"
             label_surface = font_label.render(label_text, True, (255, 100, 0))
             label_rect = label_surface.get_rect(center=(int(x), int(y) - 20))
@@ -315,11 +340,14 @@ class ServoTimeline:
 if __name__ == "__main__":
     pygame.init()
     screen = pygame.display.set_mode((1000, 700))
-    pygame.display.set_caption("Servo Timeline - Test Module")
+    pygame.display.set_caption("Servo Timeline - Test Module OPTIMISÉ")
     clock = pygame.time.Clock()
     
     # Créer une timeline de test
     timeline = ServoTimeline(position=(100, 450), size=(800, 200))
+    
+    # Afficher FPS
+    font = pygame.font.Font(None, 36)
     
     running = True
     while running:
@@ -332,6 +360,10 @@ if __name__ == "__main__":
         
         screen.fill((50, 50, 50))
         timeline.draw(screen)
+        
+        # Afficher FPS
+        fps_text = font.render(f"FPS: {clock.get_fps():.1f}", True, (0, 255, 0))
+        screen.blit(fps_text, (10, 10))
         
         pygame.display.flip()
         clock.tick(60)
