@@ -26,7 +26,7 @@ pygame.init()
 
 # ==================== CONSTANTES ====================
 WIDTH, HEIGHT = 1300, 1000
-FPS = 60
+FPS = 50
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)

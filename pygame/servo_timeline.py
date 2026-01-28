@@ -21,6 +21,8 @@ RED = (255, 70, 70)
 GREEN = (70, 255, 130)
 YELLOW = (255, 220, 70)
 
+
+
 class Keyframe:
     def __init__(self, time, angle):
         self.time = time  # [0, 1]
