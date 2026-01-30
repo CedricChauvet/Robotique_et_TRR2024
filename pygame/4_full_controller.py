@@ -468,7 +468,7 @@ def main():
     leg_left = RobotLeg(*place_leg_at_cartesian(0, 179))
     
     # Jambe DROITE (virtuelle, décalée, phase +0.5) - Pour calculs MQTT uniquement
-    leg_right = RobotLeg(*place_leg_at_cartesian(160, 179))
+    leg_right = RobotLeg(*place_leg_at_cartesian(0, 179))
     
     # ========== CREATION TIMELINE ==========
     timeline_yaw = ServoTimeline(
@@ -616,17 +616,17 @@ def main():
                     print(f"Rayon X: {new_radius}mm")
 
                 # Drag & Drop du pied
-                if leg_left.control_mode == "cartesian":
+                elif leg_left.control_mode == "cartesian":
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     if leg_left.is_near_foot(mouse_x, mouse_y):
                         leg_left.dragging = True
-                    else:
-                        leg_left.inverse_kinematics_foot(mouse_x, mouse_y)
+                    #else:
+                    #    leg_left.inverse_kinematics_foot(mouse_x, mouse_y)
             
-            if event.type == pygame.MOUSEBUTTONUP:
+            elif event.type == pygame.MOUSEBUTTONUP:
                 leg_left.dragging = False
             
-            if event.type == pygame.MOUSEMOTION:
+            elif event.type == pygame.MOUSEMOTION:
                 if leg_left.dragging and leg_left.control_mode == "cartesian":
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     leg_left.inverse_kinematics_foot(mouse_x, mouse_y)
@@ -765,7 +765,8 @@ def main():
         
         # ========== DESSIN JAMBES ==========
         leg_left.draw(screen)
-        
+        leg_right.draw(screen)
+
         # ========== GESTION CURSEUR ==========
         if leg_left.control_mode == "cartesian":
             mouse_x, mouse_y = pygame.mouse.get_pos()
