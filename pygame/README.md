@@ -2,10 +2,20 @@
 
 Simulation de cinématique inverse pour jambe de robot avec contrôle MQTT temps réel vers Arduino R4 WiFi.
 
-![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
-![Arduino](https://img.shields.io/badge/Arduino-R4%20WiFi-00979D.svg)
-![MQTT](https://img.shields.io/badge/MQTT-Protocol-purple.svg)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
+
+
+
+
+
+
+https://github.com/user-attachments/assets/7e486a98-69d9-4aa1-a991-552a9fedccd1
+
+
+
+
+
+
+
 
 ## 📋 Table des matières
 
