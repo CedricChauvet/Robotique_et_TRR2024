@@ -6,7 +6,8 @@ Simulation de cinématique inverse pour jambe de robot avec contrôle MQTT temps
 
 
 
-https://github.com/user-attachments/assets/ffd24c57-ed36-4615-9070-f60f9a07f0f3
+
+https://github.com/user-attachments/assets/df5f628c-87b2-4081-8a02-d2dd42893953
 
 
 
