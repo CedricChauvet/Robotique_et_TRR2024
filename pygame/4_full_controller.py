@@ -620,16 +620,24 @@ def main():
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     if leg_left.is_near_foot(mouse_x, mouse_y):
                         leg_left.dragging = True
+                    
+                    elif leg_right.is_near_foot(mouse_x, mouse_y):
+                        leg_right.dragging = True          
                     #else:
                     #    leg_left.inverse_kinematics_foot(mouse_x, mouse_y)
             
             elif event.type == pygame.MOUSEBUTTONUP:
                 leg_left.dragging = False
+                leg_right.dragging = False
             
             elif event.type == pygame.MOUSEMOTION:
                 if leg_left.dragging and leg_left.control_mode == "cartesian":
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     leg_left.inverse_kinematics_foot(mouse_x, mouse_y)
+
+                elif leg_right.dragging and leg_left.control_mode == "cartesian":
+                    mouse_x, mouse_y = pygame.mouse.get_pos()
+                    leg_right.inverse_kinematics_foot(mouse_x, mouse_y)
         
         # ========== MISE À JOUR ==========
         timeline_yaw.update()
@@ -763,6 +771,9 @@ def main():
             pygame.draw.circle(screen, GREEN, (int(target_x_left), int(target_y_left)), 12, 3)
             pygame.draw.circle(screen, GREEN, (int(target_x_left), int(target_y_left)), 6)
         
+
+
+
         # ========== DESSIN JAMBES ==========
         leg_left.draw(screen)
         leg_right.draw(screen)
@@ -774,20 +785,45 @@ def main():
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
             else:
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
+            
+        if leg_left.control_mode == "cartesian":
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            if leg_right.is_near_foot(mouse_x, mouse_y):
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+            else:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
+            
+
+
+
         
         # ========== DESSIN INDICATEURS PIED ==========
         if leg_left.control_mode == "cartesian":
             joints_left = leg_left.forward_kinematics()
             foot_pos_left = joints_left[3]
+            joints_right = leg_right.forward_kinematics()
+            foot_pos_right = joints_right[3]
+
             if leg_left.dragging:
                 pygame.draw.circle(screen, YELLOW, (int(foot_pos_left[0]), int(foot_pos_left[1])), 25, 3)
                 pygame.draw.circle(screen, YELLOW, (int(foot_pos_left[0]), int(foot_pos_left[1])), 18, 2)
             else:
                 pygame.draw.circle(screen, GREEN, (int(foot_pos_left[0]), int(foot_pos_left[1])), 15, 2)
                 pygame.draw.circle(screen, GREEN, (int(foot_pos_left[0]), int(foot_pos_left[1])), 20, 1)
+
+
+            if leg_right.dragging:
+                pygame.draw.circle(screen, YELLOW, (int(foot_pos_right[0]), int(foot_pos_right[1])), 25, 3)
+                pygame.draw.circle(screen, YELLOW, (int(foot_pos_right[0]), int(foot_pos_right[1])), 18, 2)
+            else:
+                pygame.draw.circle(screen, RED, (int(foot_pos_right[0]), int(foot_pos_right[1])), 15, 2)
+                pygame.draw.circle(screen, RED, (int(foot_pos_right[0]), int(foot_pos_right [1])), 20, 1)
         
+
         # ========== DESSIN INTERFACE UTILISATEUR ==========
         draw_ui(screen, leg_left, leg_right, timeline_yaw, font)
         
