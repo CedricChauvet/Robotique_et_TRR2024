@@ -4,22 +4,22 @@ Le programme python « MqttReceiveTinker.py »
 
  
 Prérequis
-Matériel
-Esp2 pour le robot roulant
- Un Pc windows 11
-Logiciels
-Python 3.13+
-Arduino IDE 2.x
-Broker MQTT (Mosquitto.)
- Installation
+1. Matériel
+ - Esp2 pour le robot roulant
+ - Un Pc windows 11
+2. Logiciels
+- Python 3.13+
+- Arduino IDE 2.x
+- Broker MQTT (Mosquitto.)
+3.Installation
 1.  Récupérer le fichier python
 De préférence créer un environnement virtuel avec la version 3.13 de python
 2. Installer les dépendances Python
-pip install paho-mqtt
+- pip install paho-mqtt
 
-pip install tinker    // inteface graphique pour Python
+- pip install tinker    // inteface graphique pour Python
 
-Les autres dépendances (socket, csv, time et datetimesont inclues dans la version 
+- Les autres dépendances (socket, csv, time et datetimesont inclues dans la version 
 
 
 3. Installer le broker MQTT Windows (Mosquitto)
