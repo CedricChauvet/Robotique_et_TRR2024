@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 import tkinter as tk
-import tkinter.ttk as ttk
 import time
 import datetime
 import paho.mqtt.client as mqtt  # import library
 import socket
 import csv
-
 
 MQTT_BROKER = "127.0.0.1"  # specify the broker address, it can be IP of raspberry pi or simply localhost
 MQTT_TOPIC = "test"  # this is the name of topic
@@ -46,7 +44,6 @@ def on_connect(client, userdata, flags, rc):
         if okFic == True:
             objetFichier = open(fichier, 'w')
     else:
-        #syslog.syslog("bad connection {}".format(rc))
         print("bad connection {}".format(rc))
 
 
@@ -73,6 +70,8 @@ class DemoWidget(tk.Frame):
 
     def __init__(self, root):
         super().__init__(root)
+        self.master.configure(bg='Gray10', bd=40)
+        self.configure(bg='Gray26', bd=2 ,relief='groove')
         self.champs = {
             'message': tk.StringVar(),
             'procedure': tk.StringVar(),
@@ -80,13 +79,14 @@ class DemoWidget(tk.Frame):
         # récupère l'adresse ip du pc hote
         adresse = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][0]
         self.champs['message'].set(adresse)
-        self.champs['procedure'].set('blabla')
+        self.champs['procedure'].set('  ')
         self._create_gui()
         self.pack()
 
 
     def _create_gui(self):
-        label = tk.Label(self, text="Adresse IP Broker")
+
+        label = tk.Label(self, text="Adresse IP Broker : ")
         label.grid(column=0, row=1)
 
         text = tk.Entry(self, textvariable=self.champs['message'])
@@ -101,7 +101,6 @@ class DemoWidget(tk.Frame):
         button = tk.Button(self, text="Ecriture ficher", command=self.CreerFic)
         button.grid(column=2, row=100)
 
-        #button = tk.Button(self, text="Fermer", command=app.quit)
         button = tk.Button(self, text="Fermer", command=app.quit)
         button.grid(column=3, row=100)
 
@@ -126,3 +125,4 @@ app = tk.Tk()
 app.title("Subscribe Mqtt")
 DemoWidget(app)
 app.mainloop()
+
