@@ -31,7 +31,7 @@ class Keyframe:
 class ServoTimeline:
     """Timeline pour contrôler un servomoteur avec interpolation spline"""
     
-    def __init__(self, position=(100, 450), size=(800, 200), angle_range=(-60, 60), duration=3.0):
+    def __init__(self, position=(100, 450), size=(800, 200), angle_range=(-60, 60), duration=3.0, colorSPline=YELLOW ):
         """
         Args:
             position: (x, y) Position de la timeline
@@ -65,6 +65,7 @@ class ServoTimeline:
         # Interface
         self.selected_keyframe = None
         self.dragging = False
+        self.colorSPline = colorSPline
         
         # Font
         self.font_small = pygame.font.Font(None, 20)
@@ -190,7 +191,7 @@ class ServoTimeline:
                 points.append((x, y))
             
             if len(points) > 1:
-                pygame.draw.lines(screen, BLUE, False, points, 2)
+                pygame.draw.lines(screen, self.colorSPline, False, points, 2)
         
         # Keyframes
         for i, kf in enumerate(self.keyframes):
@@ -242,6 +243,7 @@ class ServoTimeline:
         screen.blit(time_surf, (cursor_x + 5, self.timeline_rect.top - 25))
         screen.blit(angle_surf, (cursor_x + 5, self.timeline_rect.top - 10))
         
+        """
         # Curseur en opposition de phase (ligne rouge, décalé de +0.5)
         opposite_time = (self.current_time + 0.5) % 1.0
         opposite_angle = self.interpolate_angle(opposite_time)
@@ -257,7 +259,7 @@ class ServoTimeline:
         opp_angle_surf = self.font_small.render(opp_angle_text, True, RED)
         screen.blit(opp_time_surf, (opposite_x + 5, self.timeline_rect.top - 25))
         screen.blit(opp_angle_surf, (opposite_x + 5, self.timeline_rect.top - 10))
-    
+        """
     def handle_event(self, event):
         """Gère un événement pygame. Retourne True si l'événement a été consommé"""
         if event.type == pygame.KEYDOWN:

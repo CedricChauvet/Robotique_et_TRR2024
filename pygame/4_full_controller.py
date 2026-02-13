@@ -25,8 +25,8 @@ Place la hanche a X=0, Y=150 dans le repere cartesien
 pygame.init()
 
 # ==================== CONSTANTES ====================
-WIDTH, HEIGHT = 1300, 1000
-FPS = 50
+WIDTH, HEIGHT = 1700, 1000
+FPS = 30
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -36,7 +36,7 @@ YELLOW = (255, 255, 0)
 GRAY = (150, 150, 150)
 
 # ==================== CONFIGURATION MQTT ====================
-MQTT_BROKER = "192.168.1.192"  # Pour les tests locaux
+MQTT_BROKER = "localhost"  # Pour les tests locaux
 MQTT_PORT = 1883
 MQTT_ENABLED = False  # Activer/Desactiver avec la touche 'M'
 
@@ -178,7 +178,7 @@ class RobotLeg:
         # Paramètres de l'ellipse horizontale
         self.ellipse_center_x = 0       # Centre X
         self.ellipse_center_y = 40       # Centre Y
-        self.ellipse_radius_x = 100     # Grand rayon (horizontal) - plus grand
+        self.ellipse_radius_x = 75     # Grand rayon (horizontal) - plus grand
         self.ellipse_radius_y = 20      # Petit rayon (vertical) - plus petit
 
     def update_rectangle_corners(self):
@@ -373,7 +373,7 @@ class RobotLeg:
         pygame.draw.circle(screen, color, (int(screen_center[0]), int(screen_center[1])), 4)
 
 # ==================== FONCTION INTERFACE UTILISATEUR ====================
-def draw_ui(screen, leg_left, leg_right, timeline_yaw, font):
+def draw_ui(screen, leg_left, leg_right, timeline_yaw_left, timeline_yaw_right, font):
     """Affiche l'interface utilisateur"""
     joints = leg_left.forward_kinematics()
     foot_pos = joints[3]
@@ -402,7 +402,7 @@ def draw_ui(screen, leg_left, leg_right, timeline_yaw, font):
         f"mode {'jambe DROITE' if toggle else 'jambes GAUCHE'} activé",
         "",
         f"Mode: {'CARTESIEN -> Controle position pied (X,Y)' if leg_left.control_mode == 'cartesian' else 'ANGULAIRE -> Controle angles (theta)'}",
-        f"Animations: {'EN COURS (t={timeline_yaw.current_time:.2f})' if leg_left.animation_active else 'EN PAUSE'}",
+        f"Animations: {'EN COURS (t={timeline_yaw_left.current_time:.2f})' if leg_left.animation_active else 'EN PAUSE'}",
         f"MQTT: {mqtt_status}",
         "Topics MQTT: jambe_G, jambe_D (opposition)",
         "Point VERT = Jambe principale | Point ROUGE = Jambe opposée",
@@ -413,12 +413,12 @@ def draw_ui(screen, leg_left, leg_right, timeline_yaw, font):
         f"theta1 (Segment 1): {math.degrees(leg_left.theta1):7.1f}° ",
         f"theta2 (Segment 2): {math.degrees(leg_left.theta2):7.1f}° ",
         f"theta3 (Segment 3): {math.degrees(leg_left.theta3):7.1f}°",
-        f"yaw_left: {timeline_yaw.get_current_angle():7.1f}°",
+        f"yaw_left: {timeline_yaw_left.get_current_angle():7.1f}°",
         "",
         f"Dtheta1 (Segment 1): {math.degrees(leg_right.theta1):7.1f}° ",
         f"Dtheta2 (Segment 2): {math.degrees(leg_right.theta2):7.1f}° ",
         f"Dtheta3 (Segment 3): {math.degrees(leg_right.theta3):7.1f}°",
-        f"yaw_right: {timeline_yaw.get_opposite_angle():7.1f}°",
+        f"yaw_right: {timeline_yaw_right.get_current_angle():7.1f}°",
         "",
         f"Dimensions reelles: L1={L1}mm | L2={L2}mm | L3={L3}mm",
     ]
@@ -471,18 +471,33 @@ def main():
     leg_right = RobotLeg(*place_leg_at_cartesian(0, 179))
     
     # ========== CREATION TIMELINE ==========
-    timeline_yaw = ServoTimeline(
-        position=(600, 600),
+    timeline_yaw_left = ServoTimeline(
+        position=(400, 600),
         size=(600, 300),
         angle_range=(-60, 60),
         duration=leg_left.animation_duration,
+        colorSPline=GREEN,
     )
-    timeline_yaw.keyframes = [
+    timeline_yaw_left.keyframes = [
         Keyframe(0.0, 0),
         Keyframe(0.5, 20),
         Keyframe(1.0, 0)
     ]
     
+    timeline_yaw_right = ServoTimeline(
+        position=(1050, 600),
+        size=(600, 300),
+        angle_range=(-60, 60),
+        duration=leg_left.animation_duration,
+        colorSPline=RED,
+    )
+    timeline_yaw_right.keyframes = [
+        Keyframe(0.0, 0),
+        Keyframe(0.5, 20),
+        Keyframe(1.0, 0)
+    ]
+
+
     # ========== CREATION BOUTONS UI ==========
     # Boutons durée
     btn_decrease = pygame.Rect(20, HEIGHT - 80, 40, 40)
@@ -513,17 +528,20 @@ def main():
             if event.type == pygame.KEYDOWN:
                 # ESPACE : Lancer/Arrêter les animations synchronisées
                 if event.key == pygame.K_SPACE:
-                    timeline_yaw.is_playing = not timeline_yaw.is_playing
-                    leg_left.animation_active = timeline_yaw.is_playing
-                    leg_right.animation_active = timeline_yaw.is_playing
+                    timeline_yaw_left.is_playing = not timeline_yaw_left.is_playing
+                    timeline_yaw_right.is_playing = not timeline_yaw_right.is_playing
+                    leg_left.animation_active = timeline_yaw_left.is_playing
+                    leg_right.animation_active = timeline_yaw_left.is_playing
                     
-                    if timeline_yaw.is_playing:
-                        timeline_yaw.start_time = pygame.time.get_ticks() - timeline_yaw.current_time * timeline_yaw.duration * 1000
+                    if timeline_yaw_left.is_playing:
+                        timeline_yaw_left.start_time = pygame.time.get_ticks() - timeline_yaw_left.current_time * timeline_yaw_left.duration * 1000
+                        timeline_yaw_right.start_time = pygame.time.get_ticks() - timeline_yaw_left.current_time * timeline_yaw_left.duration * 1000
+
                         leg_left.control_mode = "cartesian"
                         leg_right.control_mode = "cartesian"
-                        print(f"Animations synchronisées: REPRISES à t={timeline_yaw.current_time:.2f}")
+                        print(f"Animations synchronisées: REPRISES à t={timeline_yaw_left.current_time:.2f}")
                     else:
-                        print(f"Animations synchronisées: ARRÊTÉES à t={timeline_yaw.current_time:.2f}")
+                        print(f"Animations synchronisées: ARRÊTÉES à t={timeline_yaw_left.current_time:.2f}")
                     
                     pass_to_timeline = False
                 
@@ -546,8 +564,10 @@ def main():
                     leg_right.foot_y = joints_right[3][1]
                     
                     # Reset animations
-                    timeline_yaw.current_time = 0.0
-                    timeline_yaw.is_playing = False
+                    timeline_yaw_left.current_time = 0.0
+                    timeline_yaw_left.is_playing = False
+                    timeline_yaw_right.current_time = 0.0
+                    timeline_yaw_right.is_playing = False
                     leg_left.animation_time = 0.0
                     leg_right.animation_time = 0.0
                     leg_left.animation_active = False
@@ -581,7 +601,8 @@ def main():
             
             # Gestion des événements de la timeline
             if pass_to_timeline:
-                timeline_yaw.handle_event(event)
+                timeline_yaw_left.handle_event(event)
+                timeline_yaw_right.handle_event(event)
             
             # ========== GESTION SOURIS ==========
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -592,14 +613,16 @@ def main():
                     new_duration = max(1.0, leg_left.animation_duration - 0.25)
                     leg_left.animation_duration = new_duration
                     leg_right.animation_duration = new_duration
-                    timeline_yaw.duration = new_duration
+                    timeline_yaw_left.duration = new_duration
+                    timeline_yaw_right.duration = new_duration
                     print(f"Durée: {new_duration:.2f}s")
                 
                 elif btn_increase.collidepoint(mouse_pos):
                     new_duration = min(30.0, leg_left.animation_duration + 0.25)
                     leg_left.animation_duration = new_duration
                     leg_right.animation_duration = new_duration
-                    timeline_yaw.duration = new_duration
+                    timeline_yaw_left.duration = new_duration
+                    timeline_yaw_right.duration = new_duration
                     print(f"Durée: {new_duration:.2f}s")
 
                 # Boutons rayon
@@ -640,16 +663,17 @@ def main():
                     leg_right.inverse_kinematics_foot(mouse_x, mouse_y)
         
         # ========== MISE À JOUR ==========
-        timeline_yaw.update()
+        timeline_yaw_left.update()
+        timeline_yaw_right.update()
         
         # Synchroniser le temps de l'ellipse avec la timeline
-        if leg_left.animation_active and timeline_yaw.is_playing:
-            leg_left.animation_time = timeline_yaw.current_time * leg_left.animation_duration
+        if leg_left.animation_active and timeline_yaw_left.is_playing:
+            leg_left.animation_time = timeline_yaw_left.current_time * leg_left.animation_duration
             leg_right.animation_time = leg_left.animation_time
         
         # Récupérer les angles des servos yaw
-        yaw_left = timeline_yaw.get_current_angle()
-        yaw_right = timeline_yaw.get_opposite_angle()
+        yaw_left = timeline_yaw_left.get_current_angle()
+        yaw_right = timeline_yaw_right.get_current_angle()
         
         # ========== CONTROLES CLAVIER CONTINUS ==========
         keys = pygame.key.get_pressed()
@@ -674,6 +698,7 @@ def main():
             leg = leg_left
             if keys[pygame.K_f]:
                 toggle = not toggle
+                time.sleep(0.2)  # Anti-rebond pour éviter les basculements rapides
 
             if toggle:
                 leg = leg_right
@@ -719,7 +744,7 @@ def main():
         t1_deg_left = math.degrees(leg_left.theta1)
         t2_deg_left = math.degrees(leg_left.theta2)
         t3_deg_left = math.degrees(leg_left.theta3)
-        yaw_left = timeline_yaw.get_current_angle()
+        yaw_left = timeline_yaw_left.get_current_angle()
         message_left = f"{t1_deg_left:.1f},{t2_deg_left:.1f},{t3_deg_left:.1f},{yaw_left:.1f}"
         pub("jambe_G", message_left)
 
@@ -727,7 +752,7 @@ def main():
         t1_deg_right = math.degrees(leg_right.theta1)
         t2_deg_right = math.degrees(leg_right.theta2)
         t3_deg_right = math.degrees(leg_right.theta3)
-        yaw_right = timeline_yaw.get_opposite_angle()
+        yaw_right = timeline_yaw_right.get_current_angle()
         message_right = f"{t1_deg_right:.1f},{t2_deg_right:.1f},{t3_deg_right:.1f},{yaw_right:.1f}"
         pub("jambe_D", message_right)
 
@@ -825,10 +850,11 @@ def main():
         
 
         # ========== DESSIN INTERFACE UTILISATEUR ==========
-        draw_ui(screen, leg_left, leg_right, timeline_yaw, font)
+        draw_ui(screen, leg_left, leg_right, timeline_yaw_left,timeline_yaw_right, font)
         
         # ========== DESSIN TIMELINE ==========
-        timeline_yaw.draw(screen)
+        timeline_yaw_left.draw(screen)
+        timeline_yaw_right.draw(screen)
         
         # ========== DESSIN CONTROLES DURATION TIME ==========
         # Titre
