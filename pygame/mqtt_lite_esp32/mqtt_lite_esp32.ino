@@ -5,21 +5,20 @@
 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 
-// WiFi
-const char* ssid = "Bbox-BFE7AC14";
-const char* password = "ITetudes.256";
+const char* ssid = "Livebox-CD86";
+const char* password = "nLGMTzseTrWPmGcTdM";
 
 // MQTT
-const char* broker = "192.168.1.192";
+const char* broker = "192.168.1.10";
 int port = 1883;
 
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
-string one;
+String one;
 float theta1 = 0;
 float theta2 = 0;
 float theta3 = 0;
-
+float yaw = 0;
 // Throttling
 unsigned long lastPWMUpdate = 0;
 const unsigned long PWM_UPDATE_INTERVAL = 20;
@@ -96,6 +95,7 @@ void reconnectMQTT() {
     if (mqttClient.connect("ESP32_JambeG")) {
       Serial.println("✅ Connecté");
       mqttClient.subscribe("jambe_G");
+      mqttClient.subscribe("jambe_D");
     } else {
       Serial.printf("❌ Erreur : %d\n", mqttClient.state());
       delay(2000);
@@ -162,16 +162,16 @@ void setup() {
 void loop() {
   static int msgCount = 0;
   static unsigned long lastReport = 0;
-  
-  
+  int t0 = millis();
+  /*
   // Auto-reconnect MQTT
   if (!mqttClient.connected()) {
     reconnectMQTT();
   }
-  
+  */
   // ✅ PubSubClient gère mieux le buffer automatiquement
   mqttClient.loop();
-  
+  /*
   // Watchdog I2C
   if (millis() - lastI2CCheck >= I2C_CHECK_INTERVAL) {
     if (!checkI2C()) {
@@ -182,25 +182,49 @@ void loop() {
     }
     lastI2CCheck = millis();
   }
+  */
     // Update servos throttlé
   Wire.beginTransmission(0x40);
+  
   if (Wire.endTransmission() == 0) {
     // Calculs communs (une seule fois)
-    int ms1 = constrain(map(theta1, -135, 135, 500, 2500), 500, 2500);
+    int ms1 = constrain(map(theta1, 135, -135, 500, 2500), 500, 2500);
     int ms2 = constrain(map(theta2, -135, 135, 500, 2500), 500, 2500);
-    int ms3 = constrain(map(theta3, -135, 135, 500, 2500), 500, 2500);
+    int ms3 = constrain(map(theta3, 135, -135, 500, 2500), 500, 2500);
+
     int ms4 = constrain(map(yaw, -135, 135, 500, 2500), 500, 2500);
     
     // Offset des canaux selon la jambe
-    int offset = (one == "G") ? 0 : 4;  // G = 0-3, D = 4-7
-    
-    pwm.writeMicroseconds(offset + 0, ms1);
-    pwm.writeMicroseconds(offset + 1, ms2);
-    pwm.writeMicroseconds(offset + 2, ms3);
-    pwm.writeMicroseconds(offset + 3, ms4);
+    if (one == "G"){
+      pwm.writeMicroseconds(4, ms1 + 155);
+      pwm.writeMicroseconds(5, ms2 + 125);
+      pwm.writeMicroseconds(6, ms3 + 194);
+      pwm.writeMicroseconds(7, ms4 + 160);
+    }
+    else if (one == "D"){
+    pwm.writeMicroseconds(0, ms1 + 62);
+    pwm.writeMicroseconds(1, ms2 + 62);
+    pwm.writeMicroseconds(2, ms3 + 62);
+    pwm.writeMicroseconds(3, ms4);
   }
-    
+  delay(12);
+  int t1 = millis();
+  int freq= 1000 / (t1 - t0);
+  Serial.print(" frequence loop  :");
+  Serial.println(freq);
+  }
+ 
+  /*       pwm.writeMicroseconds(0, ms1 + 155);
+      pwm.writeMicroseconds(1, ms2 + 125);
+      pwm.writeMicroseconds(2, ms3 + 194);
+
+
+            pwm.writeMicroseconds(4, ms1  + 62);
+      pwm.writeMicroseconds(5, ms2 );
+      pwm.writeMicroseconds(6, ms3 );
+      pwm.writeMicroseconds(7, ms4 );
     lastPWMUpdate = millis();
     delay(5);
+    */
   
 }

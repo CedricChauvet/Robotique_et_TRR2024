@@ -25,7 +25,7 @@ Place la hanche a X=0, Y=150 dans le repere cartesien
 pygame.init()
 
 # ==================== CONSTANTES ====================
-WIDTH, HEIGHT = 1700, 1000
+WIDTH, HEIGHT = 1500, 1000
 FPS = 30
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -92,8 +92,8 @@ def stop_mqtt():
 
 # ==================== PARAMETRES DE LA JAMBE ====================
 L1 = 54  # Longueur segment 1 (mm)
-L2 = 54  # Longueur segment 2 (mm)
-L3 = 71  # Longueur segment 3 (mm)
+L2 = 59.5  # Longueur segment 2 (mm)
+L3 = 62  # Longueur segment 3 (mm)
 
 # Facteur de zoom pour la visualisation (3x pour mieux voir)
 ZOOM_FACTOR = 1.5

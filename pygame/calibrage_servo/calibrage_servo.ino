@@ -4,7 +4,7 @@
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 
 uint16_t currentPWM = 307;  // Valeur de départ
-
+int servo = 1;
 void setup() {
   Serial.begin(115200);
   delay(1000);
@@ -16,8 +16,18 @@ void setup() {
   pwm.setPWMFreq(50);
   delay(100);
   
-  pwm.setPWM(8, 0, currentPWM);
+  pwm.setPWM(servo, 0, currentPWM);
+  pwm.setPWM(0, 0, 327);
+  pwm.setPWM(1, 0, 336);
+  pwm.setPWM(2, 0, 327);
+  pwm.setPWM(3, 0, 309);
+
+
   
+  pwm.setPWM(4, 0, 348);  
+  pwm.setPWM(5, 0, 340);
+  pwm.setPWM(6, 0, 351);
+  pwm.setPWM(7, 0, 342); // = 1969 micro
   Serial.println("=== Calibration RDS3225 ===");
   Serial.println("Commandes:");
   Serial.println("  + ou w : +1 PWM");
@@ -91,7 +101,7 @@ void updateServo() {
   if (currentPWM < 150) currentPWM = 150;
   if (currentPWM > 500) currentPWM = 500;
   
-  pwm.setPWM(8, 0, currentPWM);
+  pwm.setPWM(servo, 0, currentPWM);
   printPWM();
 }
 
