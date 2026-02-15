@@ -8,6 +8,10 @@ import math
 import sys
 import paho.mqtt.client as mqtt
 from servo_timeline import *
+import yaml
+import os
+from pathlib import Path
+
 
 """
 LOGICIEL DE CINEMATIQUE EMBARQUEE - JAMBE DE ROBOT
@@ -20,6 +24,93 @@ Configuration du repere cartesien :
 Exemple : leg = RobotLeg(*place_leg_at_cartesian(0, 150))
 Place la hanche a X=0, Y=150 dans le repere cartesien
 """
+# ==================== CONFIGURATION FICHIER SAUVEGARDE DE LA TIMELINE ====================
+CONFIG_FILE = "robot_leg_config.yaml"
+
+# ==================== SAUVEGARDE/CHARGEMENT CONFIGURATION ====================
+def save_config(timeline_yaw_left, timeline_yaw_right, leg_left):
+    """Sauvegarde la configuration dans un fichier YAML"""
+    config = {
+        'timeline_yaw_left': {
+            'keyframes': [
+                {'time': kf.time, 'angle': kf.angle} 
+                for kf in timeline_yaw_left.keyframes
+            ]
+        },
+        'timeline_yaw_right': {
+            'keyframes': [
+                {'time': kf.time, 'angle': kf.angle} 
+                for kf in timeline_yaw_right.keyframes
+            ]
+        },
+        'animation': {
+            'duration': leg_left.animation_duration
+        },
+        'ellipse': {
+            'center_x': leg_left.ellipse_center_x,
+            'center_y': leg_left.ellipse_center_y,
+            'radius_x': leg_left.ellipse_radius_x,
+            'radius_y': leg_left.ellipse_radius_y
+        }
+    }
+    
+    try:
+        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+            yaml.dump(config, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        print(f"✅ Configuration sauvegardée dans '{CONFIG_FILE}'")
+    except Exception as e:
+        print(f"❌ Erreur sauvegarde: {e}")
+
+def load_config(timeline_yaw_left, timeline_yaw_right, leg_left, leg_right):
+    """Charge la configuration depuis un fichier YAML"""
+    if not os.path.exists(CONFIG_FILE):
+        print(f"ℹ️  Pas de fichier de config trouvé, utilisation des valeurs par défaut")
+        return False
+    
+    try:
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+        
+        # Charger timeline GAUCHE
+        if 'timeline_yaw_left' in config:
+            timeline_yaw_left.keyframes = [
+                Keyframe(kf['time'], kf['angle']) 
+                for kf in config['timeline_yaw_left']['keyframes']
+            ]
+        
+        # Charger timeline DROITE
+        if 'timeline_yaw_right' in config:
+            timeline_yaw_right.keyframes = [
+                Keyframe(kf['time'], kf['angle']) 
+                for kf in config['timeline_yaw_right']['keyframes']
+            ]
+        
+        # Charger durée animation
+        if 'animation' in config:
+            duration = config['animation']['duration']
+            leg_left.animation_duration = duration
+            leg_right.animation_duration = duration
+            timeline_yaw_left.duration = duration
+            timeline_yaw_right.duration = duration
+        
+        # Charger paramètres ellipse
+        if 'ellipse' in config:
+            leg_left.ellipse_center_x = config['ellipse']['center_x']
+            leg_left.ellipse_center_y = config['ellipse']['center_y']
+            leg_left.ellipse_radius_x = config['ellipse']['radius_x']
+            leg_left.ellipse_radius_y = config['ellipse']['radius_y']
+            
+            leg_right.ellipse_center_x = config['ellipse']['center_x']
+            leg_right.ellipse_center_y = config['ellipse']['center_y']
+            leg_right.ellipse_radius_x = config['ellipse']['radius_x']
+            leg_right.ellipse_radius_y = config['ellipse']['radius_y']
+        
+        print(f"✅ Configuration chargée depuis '{CONFIG_FILE}'")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Erreur chargement: {e}")
+        return False
 
 # ==================== INITIALISATION PYGAME ====================
 pygame.init()
@@ -472,7 +563,7 @@ def main():
     
     # ========== CREATION TIMELINE ==========
     timeline_yaw_left = ServoTimeline(
-        position=(400, 600),
+        position=(600, 600),
         size=(600, 300),
         angle_range=(-60, 60),
         duration=leg_left.animation_duration,
@@ -480,23 +571,28 @@ def main():
     )
     timeline_yaw_left.keyframes = [
         Keyframe(0.0, 0),
-        Keyframe(0.5, 20),
+        Keyframe(0.5, 0),
         Keyframe(1.0, 0)
     ]
     
     timeline_yaw_right = ServoTimeline(
-        position=(1050, 600),
+        position=(600, 600),
         size=(600, 300),
         angle_range=(-60, 60),
         duration=leg_left.animation_duration,
         colorSPline=RED,
     )
     timeline_yaw_right.keyframes = [
-        Keyframe(0.0, 0),
+        Keyframe(0.0, 20),
         Keyframe(0.5, 20),
-        Keyframe(1.0, 0)
+        Keyframe(1.0, 20)
     ]
 
+
+
+   # ========== CHARGEMENT CONFIGURATION ==========
+    load_config(timeline_yaw_left, timeline_yaw_right, leg_left, leg_right)
+    
 
     # ========== CREATION BOUTONS UI ==========
     # Boutons durée
@@ -601,8 +697,13 @@ def main():
             
             # Gestion des événements de la timeline
             if pass_to_timeline:
-                timeline_yaw_left.handle_event(event)
-                timeline_yaw_right.handle_event(event)
+
+                # ========== GESTION TIMELINES AVEC MODIFICATEURS ==========
+                # CTRL + clic/drag = Éditer timeline VERTE (jambe gauche)
+                timeline_yaw_left.handle_event(event, required_modifier=pygame.KMOD_CTRL)
+                
+                # ALT + clic/drag = Éditer timeline ROUGE (jambe droite)
+                timeline_yaw_right.handle_event(event, required_modifier=pygame.KMOD_ALT)
             
             # ========== GESTION SOURIS ==========
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -821,10 +922,6 @@ def main():
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
-            
-
-
-
         
         # ========== DESSIN INDICATEURS PIED ==========
         if leg_left.control_mode == "cartesian":
@@ -853,8 +950,21 @@ def main():
         draw_ui(screen, leg_left, leg_right, timeline_yaw_left,timeline_yaw_right, font)
         
         # ========== DESSIN TIMELINE ==========
-        timeline_yaw_left.draw(screen)
-        timeline_yaw_right.draw(screen)
+        # Dessiner la grille + courbe VERTE (jambe gauche)
+        timeline_yaw_left.draw(screen, draw_background=True)
+
+        # Dessiner SEULEMENT la courbe ROUGE par-dessus (jambe droite)
+        timeline_yaw_right.draw(screen, draw_background=False)
+
+        # Légende
+        legend_y = 560
+        pygame.draw.circle(screen, GREEN, (600, legend_y), 8)
+        legend_left = font.render("Jambe Gauche (ctrl)", True, GREEN)
+        screen.blit(legend_left, (620, legend_y - 10))
+
+        pygame.draw.circle(screen, RED, (800, legend_y), 8)
+        legend_right = font.render("Jambe Droite (alt)", True, RED)
+        screen.blit(legend_right, (820, legend_y - 10))
         
         # ========== DESSIN CONTROLES DURATION TIME ==========
         # Titre
@@ -911,6 +1021,12 @@ def main():
         # ========== RAFRAICHISSEMENT ECRAN ==========
         pygame.display.flip()
         clock.tick(FPS)
+    
+
+    # ========== ARRET PROPRE ==========
+    # 💾 SAUVEGARDE AVANT DE QUITTER
+    save_config(timeline_yaw_left, timeline_yaw_right, leg_left)
+
     
     # ========== ARRET PROPRE ==========
     stop_mqtt()

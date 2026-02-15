@@ -79,7 +79,7 @@ class ServoTimeline:
         return self.interpolate_angle(self.current_time)
     
     def get_opposite_angle(self):
-        """Retourne l'angle en opposition de phase (+0.5)"""
+        """Retourne l'angle en opposition de phase (+0.5), abandonné :/ """
         opposite_time = (self.current_time + 0.5) % 1.0
         return self.interpolate_angle(opposite_time)
     
@@ -143,44 +143,48 @@ class ServoTimeline:
         angle = self.angle_min + normalized * (self.angle_max - self.angle_min)
         return max(self.angle_min, min(self.angle_max, angle))
     
-    def draw(self, screen):
-        """Dessine la timeline sur l'écran"""
-        # Fond de la timeline
-        #pygame.draw.rect(screen, WHITE, self.timeline_rect)
-        #pygame.draw.rect(screen, BLACK, self.timeline_rect, 2)
-        font_label = pygame.font.Font(None, 20)
+    def draw(self, screen, draw_background=True):
+        """Dessine la timeline sur l'écran
+        
+        Args:
+            screen: Surface pygame
+            draw_background: Si True, dessine la grille et le fond (défaut=True)
+        """
+        
+        # ========== GRILLE ET FOND (seulement si draw_background=True) ==========
+        if draw_background:
+            font_label = pygame.font.Font(None, 20)
 
-        # Grille horizontale (angles)
-        num_h_lines = 6
-        for i in range(num_h_lines + 1):
-            angle = self.angle_min + i * (self.angle_max - self.angle_min) / num_h_lines
-            y = self.angle_to_y(angle)
-            pygame.draw.line(screen, BLACK, 
-                           (self.timeline_rect.left, y), 
-                           (self.timeline_rect.right, y), 1)
+            # Grille horizontale (angles)
+            num_h_lines = 6
+            for i in range(num_h_lines + 1):
+                angle = self.angle_min + i * (self.angle_max - self.angle_min) / num_h_lines
+                y = self.angle_to_y(angle)
+                pygame.draw.line(screen, BLACK, 
+                            (self.timeline_rect.left, y), 
+                            (self.timeline_rect.right, y), 1)
+                
+                # Labels des angles
+                label = self.font_small.render(f"{angle:.0f}°", True, BLACK)
+                screen.blit(label, (self.timeline_rect.left - 40, y - 10))
             
-            # Labels des angles
-            label = self.font_small.render(f"{angle:.0f}°", True, BLACK)
-            screen.blit(label, (self.timeline_rect.left - 40, y - 10))
+            # Grille verticale (temps)
+            num_v_lines = 10
+            for i in range(num_v_lines + 1):
+                time = i / num_v_lines
+                x = self.time_to_x(time)
+                pygame.draw.line(screen, BLACK,
+                            (x, self.timeline_rect.top),
+                            (x, self.timeline_rect.bottom), 1)
+                
+                # Labels du temps
+                label = self.font_small.render(f"{time:.1f}", True, BLACK)
+                screen.blit(label, (x - 15, self.timeline_rect.bottom + 5))
         
-        # Grille verticale (temps)
-        num_v_lines = 10
-        for i in range(num_v_lines + 1):
-            time = i / num_v_lines
-            x = self.time_to_x(time)
-            pygame.draw.line(screen, BLACK,
-                           (x, self.timeline_rect.top),
-                           (x, self.timeline_rect.bottom), 1)
-            
-            # Labels du temps
-            label = self.font_small.render(f"{time:.1f}", True, BLACK)
-            screen.blit(label, (x - 15, self.timeline_rect.bottom + 5))
-        
-        # ✅ OPTIMISATION : Courbe d'interpolation avec moins de points
+        # ========== COURBE ET KEYFRAMES (toujours dessinés) ==========
         sorted_kf = sorted(self.keyframes, key=lambda k: k.time)
         if len(sorted_kf) >= 2:
             points = []
-            # Dessiner max 200 points au lieu de timeline_rect.width (600)
             num_points = min(100, self.timeline_rect.width)
             
             for i in range(num_points):
@@ -198,27 +202,26 @@ class ServoTimeline:
             x = self.time_to_x(kf.time)
             y = self.angle_to_y(kf.angle)
             
-            color = YELLOW if i == self.selected_keyframe else RED
+            color = YELLOW if i == self.selected_keyframe else self.colorSPline
             size = 10 if i == self.selected_keyframe else 8
             
             pygame.draw.circle(screen, color, (int(x), int(y)), size)
             pygame.draw.circle(screen, BLACK, (int(x), int(y)), size, 2)
 
             # Label au-dessus du keyframe
-            label_text = f"({kf.time:.2f}, {kf.angle:.1f}°)"
-            label_surface = font_label.render(label_text, True, (255, 100, 0))
-            label_rect = label_surface.get_rect(center=(int(x), int(y) - 20))
-            
-            # Fond blanc pour meilleure lisibilité
-            bg_rect = label_rect.inflate(4, 2)
-            pygame.draw.rect(screen, (255, 255, 255), bg_rect)
-            pygame.draw.rect(screen, (0, 0, 0), bg_rect, 1)
-            
-            # Afficher le label
-            screen.blit(label_surface, label_rect)
+            if draw_background or i == self.selected_keyframe:  # Labels seulement si background OU sélectionné
+                font_label = pygame.font.Font(None, 20)
+                label_text = f"({kf.time:.2f}, {kf.angle:.1f}°)"
+                label_surface = font_label.render(label_text, True, self.colorSPline)
+                label_rect = label_surface.get_rect(center=(int(x), int(y) - 20))
+                
+                bg_rect = label_rect.inflate(4, 2)
+                pygame.draw.rect(screen, (255, 255, 255), bg_rect)
+                pygame.draw.rect(screen, (0, 0, 0), bg_rect, 1)
+                screen.blit(label_surface, label_rect)
 
         # Tangentes
-        if self.show_tangents:
+        if self.show_tangents and draw_background:
             for kf in sorted_kf:
                 x = self.time_to_x(kf.time)
                 y = self.angle_to_y(kf.angle)
@@ -228,21 +231,20 @@ class ServoTimeline:
                                 (int(x - tangent_length), int(y)),
                                 (int(x + tangent_length), int(y)), 3)
         
-        # Curseur de temps actuel (ligne verte)
-        cursor_x = self.time_to_x(self.current_time)
-        current_angle = self.interpolate_angle(self.current_time)
-        pygame.draw.line(screen, GREEN,
-                        (cursor_x, self.timeline_rect.top),
-                        (cursor_x, self.timeline_rect.bottom), 3)
-        
-        # Affichage des infos ligne verte
-        time_text = f"t={self.current_time:.2f}s"
-        angle_text = f"{current_angle:.1f}°"
-        time_surf = self.font_small.render(time_text, True, GREEN)
-        angle_surf = self.font_small.render(angle_text, True, GREEN)
-        screen.blit(time_surf, (cursor_x + 5, self.timeline_rect.top - 25))
-        screen.blit(angle_surf, (cursor_x + 5, self.timeline_rect.top - 10))
-        
+        # Curseur de temps actuel
+        if draw_background:  # Un seul curseur si background
+            cursor_x = self.time_to_x(self.current_time)
+            current_angle = self.interpolate_angle(self.current_time)
+            pygame.draw.line(screen, self.colorSPline,
+                            (cursor_x, self.timeline_rect.top),
+                            (cursor_x, self.timeline_rect.bottom), 2)
+            
+            time_text = f"t={self.current_time:.2f}s"
+            angle_text = f"{current_angle:.1f}°"
+            time_surf = self.font_small.render(time_text, True, self.colorSPline)
+            angle_surf = self.font_small.render(angle_text, True, self.colorSPline)
+            screen.blit(time_surf, (cursor_x + 5, self.timeline_rect.top - 25))
+            screen.blit(angle_surf, (cursor_x + 5, self.timeline_rect.top - 10))
         """
         # Curseur en opposition de phase (ligne rouge, décalé de +0.5)
         opposite_time = (self.current_time + 0.5) % 1.0
@@ -260,8 +262,23 @@ class ServoTimeline:
         screen.blit(opp_time_surf, (opposite_x + 5, self.timeline_rect.top - 25))
         screen.blit(opp_angle_surf, (opposite_x + 5, self.timeline_rect.top - 10))
         """
-    def handle_event(self, event):
-        """Gère un événement pygame. Retourne True si l'événement a été consommé"""
+
+
+
+    def handle_event(self, event, required_modifier=None):
+        """Gère un événement pygame. Retourne True si l'événement a été consommé
+        
+        Args:
+            event: Événement pygame
+            required_modifier: Modificateur requis (pygame.KMOD_CTRL, pygame.KMOD_ALT, etc.)
+                            Si None, accepte tous les clics
+        """
+        # Vérifier si le modificateur requis est pressé
+        if required_modifier is not None:
+            mods = pygame.key.get_mods()
+            if not (mods & required_modifier):
+                return False  # Modificateur non pressé, ignorer l'événement
+        
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 self.is_playing = not self.is_playing
@@ -324,6 +341,7 @@ class ServoTimeline:
                     return True
         
         return False
+
     
     def update(self):
         """Met à jour l'état de l'animation"""
