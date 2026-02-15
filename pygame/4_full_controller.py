@@ -3,6 +3,8 @@ by ced with claude
 """
 # ==================== IMPORTS ====================
 import time
+
+from sympy import re
 import pygame
 import math
 import sys
@@ -11,6 +13,7 @@ from servo_timeline import *
 import yaml
 import os
 from pathlib import Path
+import re
 
 
 """
@@ -113,10 +116,17 @@ def load_config(timeline_yaw_left, timeline_yaw_right, leg_left, leg_right):
         return False
 
 # ==================== INITIALISATION PYGAME ====================
-pygame.init()
+pygame.init()  # Important : initialiser avant get_desktop_sizes()
+info = pygame.display.Info()
+SCREEN_WIDTH = info.current_w
+SCREEN_HEIGHT = info.current_h
 
-# ==================== CONSTANTES ====================
-WIDTH, HEIGHT = 1500, 1000
+# Utiliser 90% de la taille d'écran avec marges
+WIDTH = int(SCREEN_WIDTH * 0.9)
+HEIGHT = int(SCREEN_HEIGHT * 0.85)  # 85% pour laisser place à la barre de tâches
+
+print(f"📐 Résolution écran: {SCREEN_WIDTH}x{SCREEN_HEIGHT}")
+print(f"📐 Fenêtre pygame: {WIDTH}x{HEIGHT}")
 FPS = 30
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -225,7 +235,7 @@ def draw_cartesian_grid(screen):
     """Dessine le repere cartesien avec grille"""
     # Axes principaux
     # Axe X (horizontal, rouge)
-    pygame.draw.line(screen, RED, (WIDTH/2, REPERE_ORIGIN_Y), (WIDTH, REPERE_ORIGIN_Y), 2)
+    pygame.draw.line(screen, RED, (600, REPERE_ORIGIN_Y), (1200, REPERE_ORIGIN_Y), 2)
     # Axe Y (vertical, vert)
     pygame.draw.line(screen, GREEN, (REPERE_ORIGIN_X, 0), (REPERE_ORIGIN_X, HEIGHT/2), 2)
     
@@ -236,7 +246,7 @@ def draw_cartesian_grid(screen):
     font_small = pygame.font.Font(None, 20)
     label_x = font_small.render("X+", True, RED)
     label_y = font_small.render("Y+", True, GREEN)
-    screen.blit(label_x, (WIDTH - 30, REPERE_ORIGIN_Y - 20))
+    screen.blit(label_x, (1200, REPERE_ORIGIN_Y - 20))
     screen.blit(label_y, (REPERE_ORIGIN_X + 10, 10))
     
     # Origine (0,0)
@@ -268,8 +278,8 @@ class RobotLeg:
         
         # Paramètres de l'ellipse horizontale
         self.ellipse_center_x = 0       # Centre X
-        self.ellipse_center_y = 40       # Centre Y
-        self.ellipse_radius_x = 75     # Grand rayon (horizontal) - plus grand
+        self.ellipse_center_y = 40.0       # Centre Y
+        self.ellipse_radius_x = 75.0     # Grand rayon (horizontal) - plus grand
         self.ellipse_radius_y = 20      # Petit rayon (vertical) - plus petit
 
     def update_rectangle_corners(self):
@@ -468,9 +478,15 @@ def draw_ui(screen, leg_left, leg_right, timeline_yaw_left, timeline_yaw_right, 
     """Affiche l'interface utilisateur"""
     joints = leg_left.forward_kinematics()
     foot_pos = joints[3]
-    
+
+    joints_right = leg_right.forward_kinematics()
+    foot_pos_right = joints_right[3]
+
+    center_y = leg_left.ellipse_center_y
+
     # Convertir en coordonnees cartesiennes
     cart_x, cart_y = screen_to_cartesian(foot_pos[0], foot_pos[1])
+    cart_x_right, cart_y_right = screen_to_cartesian(foot_pos_right[0], foot_pos_right[1])
     hip_cart_x, hip_cart_y = screen_to_cartesian(leg_left.origin[0], leg_left.origin[1])
     
     # Statut MQTT
@@ -486,59 +502,66 @@ def draw_ui(screen, leg_left, leg_right, timeline_yaw_left, timeline_yaw_right, 
         "R : Reset complet (position + animations à t=0)",
         "P : Basculer mode cartesien/angulaire",
         "M : Activer/Desactiver MQTT",
-        "",
         "F : Flip jambe gauche/jambe droite pour déplacement avec flèches", 
-        "FLECHES GAUCHE/DROITE : Deplacer le POINT ROUGE horizontalement",
-        "FLECHES HAUT/BAS : Deplacer le POINT ROUGE verticalement",
-        f"mode {'jambe DROITE' if toggle else 'jambes GAUCHE'} activé",
         "",
-        f"Mode: {'CARTESIEN -> Controle position pied (X,Y)' if leg_left.control_mode == 'cartesian' else 'ANGULAIRE -> Controle angles (theta)'}",
-        f"Animations: {'EN COURS (t={timeline_yaw_left.current_time:.2f})' if leg_left.animation_active else 'EN PAUSE'}",
+        f"{'jambe DROITE' if toggle else 'jambe GAUCHE'} activé",
         f"MQTT: {mqtt_status}",
-        "Topics MQTT: jambe_G, jambe_D (opposition)",
-        "Point VERT = Jambe principale | Point ROUGE = Jambe opposée",
+        
+ 
         "",
-        f"Hanche (repere): X={hip_cart_x:.1f}mm  Y={hip_cart_y:.1f}mm",
-        f"Pied (repere): X={cart_x:.1f}mm  Y={cart_y:.1f}mm",
+        f"Hanche (repere): X={hip_cart_x:.1f}mm  Y={hip_cart_y:.1f}mm  /  L1={L1}mm, L2={L2}mm, L3={L3}mm",
+        f"Pied Gauche (repere): X={cart_x:.1f}mm  Y={(cart_y - center_y):.1f}mm",
+        f"Pied Droit (repere): X={cart_x_right:.1f}mm  Y={(cart_y_right - center_y) :.1f}  mm",
         "",
-        f"theta1 (Segment 1): {math.degrees(leg_left.theta1):7.1f}° ",
-        f"theta2 (Segment 2): {math.degrees(leg_left.theta2):7.1f}° ",
-        f"theta3 (Segment 3): {math.degrees(leg_left.theta3):7.1f}°",
-        f"yaw_left: {timeline_yaw_left.get_current_angle():7.1f}°",
+        f"jambe GAUCHE",
+        f"θ1 (Segment 1): {math.degrees(leg_left.theta1):7.1f}° ",
+        f"θ2 (Segment 2): {math.degrees(leg_left.theta2):7.1f}° ",
+        f"θ3 (Segment 3): {math.degrees(leg_left.theta3):7.1f}°",
+        f"roll_left: {timeline_yaw_left.get_current_angle():7.1f}°",
         "",
-        f"Dtheta1 (Segment 1): {math.degrees(leg_right.theta1):7.1f}° ",
-        f"Dtheta2 (Segment 2): {math.degrees(leg_right.theta2):7.1f}° ",
-        f"Dtheta3 (Segment 3): {math.degrees(leg_right.theta3):7.1f}°",
-        f"yaw_right: {timeline_yaw_right.get_current_angle():7.1f}°",
+        f"jambe DROITE",
+        f"θ1 (Segment 1): {math.degrees(leg_right.theta1):7.1f}° ",
+        f"θ2 (Segment 2): {math.degrees(leg_right.theta2):7.1f}° ",
+        f"θ3 (Segment 3): {math.degrees(leg_right.theta3):7.1f}°",
+        f"roll_right: {timeline_yaw_right.get_current_angle():7.1f}°",
         "",
-        f"Dimensions reelles: L1={L1}mm | L2={L2}mm | L3={L3}mm",
+        # f"Dimensions reelles: L1={L1}mm | L2={L2}mm | L3={L3}mm",
     ]
     
     # Ajouter les contrôles angulaires si en mode angulaire
-    if leg_left.control_mode == "angular":
-        texts.insert(7, "")
-        texts.insert(8, "MODE ANGULAIRE: Q/W (theta1), A/S (theta2), Z/X (theta3)")
+    if leg_left.control_mode == "cartesian":
+        texts.insert(8, "MODE CARTESIEN: FLECHES GAUCHE/DROITE & FLECHES HAUT/BAS")
     
+    if leg_left.control_mode == "angular":
+        texts.insert(8, "MODE ANGULAIRE: Q/W (theta1), A/S (theta2), Z/X (theta3)")
     for i, text in enumerate(texts):
         if i == 0:
             color = YELLOW
         elif "Mode:" in text or "Contraintes:" in text:
-            color = GREEN if leg_left.control_mode == "cartesian" else YELLOW
-        elif "Animations:" in text:
-            color = GREEN if leg_left.animation_active else GRAY
+            color = YELLOW if leg_left.control_mode == "cartesian" else YELLOW
+
         elif "MQTT:" in text:
-            if "ACTIF" in text:
+            if re.search(r'\bACTIF\b', text):  # Match "ACTIF" mais pas "INACTIF"
                 color = GREEN
-            elif "CONNECTE" in text:
+            elif re.search(r'\bCONNECTE\b', text):  # Match "CONNECTE" mais pas "DECONNECTE"
                 color = YELLOW
+            
+            elif re.search(r'\bDECONNECTE\b', text):  # Match "DESACTIF" mais pas "ACTIF"
+                color = RED
+            
+            
             else:
                 color = GRAY
         elif "Point VERT" in text or "Point ROUGE" in text:
             color = YELLOW
-        elif "POINT ROUGE" in text:
+        elif "jambe GAUCHE" in text:
+            color = GREEN
+        elif "jambe DROITE" in text:
             color = RED
         elif "Note:" in text:
             color = GRAY
+        elif re.search(r'\bMODE ANGULAIRE\b|\bMODE CARTESIEN\b', text):
+            color = BLUE
         else:
             color = BLACK
         surface = font.render(text, True, color)
@@ -556,16 +579,16 @@ def main():
     
     # ========== CREATION DES JAMBES ==========
     # Jambe GAUCHE (visible, centrée, phase 0)
-    leg_left = RobotLeg(*place_leg_at_cartesian(0, 179))
+    leg_left = RobotLeg(*place_leg_at_cartesian(0, L1 +L2 + L3))
     
     # Jambe DROITE (virtuelle, décalée, phase +0.5) - Pour calculs MQTT uniquement
-    leg_right = RobotLeg(*place_leg_at_cartesian(0, 179))
+    leg_right = RobotLeg(*place_leg_at_cartesian(0, L1 +L2 + L3))
     
     # ========== CREATION TIMELINE ==========
     timeline_yaw_left = ServoTimeline(
-        position=(600, 600),
+        position=(600, 550),
         size=(600, 300),
-        angle_range=(-60, 60),
+        angle_range=(-40, 40),
         duration=leg_left.animation_duration,
         colorSPline=GREEN,
     )
@@ -576,9 +599,9 @@ def main():
     ]
     
     timeline_yaw_right = ServoTimeline(
-        position=(600, 600),
+        position=(600, 550),
         size=(600, 300),
-        angle_range=(-60, 60),
+        angle_range=(-40, 40),
         duration=leg_left.animation_duration,
         colorSPline=RED,
     )
@@ -595,13 +618,18 @@ def main():
     
 
     # ========== CREATION BOUTONS UI ==========
+    pos_boutton= 750  # position verticale des bouttons
+
+
+
+
     # Boutons durée
-    btn_decrease = pygame.Rect(20, HEIGHT - 80, 40, 40)
-    btn_increase = pygame.Rect(70, HEIGHT - 80, 40, 40)
+    btn_decrease = pygame.Rect(20, pos_boutton + 55, 40, 40)
+    btn_increase = pygame.Rect(70, pos_boutton + 55, 40, 40)
     
     # Boutons rayon ellipse
-    btn_radius_decrease = pygame.Rect(140, HEIGHT - 80, 40, 40)
-    btn_radius_increase = pygame.Rect(190, HEIGHT - 80, 40, 40)
+    btn_radius_decrease = pygame.Rect(140, pos_boutton + 55, 40, 40)
+    btn_radius_increase = pygame.Rect(190, pos_boutton + 55, 40, 40)
 
     # ========== VARIABLES DE CONTROLE ==========
     msg_count = 0
@@ -845,16 +873,16 @@ def main():
         t1_deg_left = math.degrees(leg_left.theta1)
         t2_deg_left = math.degrees(leg_left.theta2)
         t3_deg_left = math.degrees(leg_left.theta3)
-        yaw_left = timeline_yaw_left.get_current_angle()
-        message_left = f"{t1_deg_left:.1f},{t2_deg_left:.1f},{t3_deg_left:.1f},{yaw_left:.1f}"
+        roll_left = timeline_yaw_left.get_current_angle()
+        message_left = f"{t1_deg_left:.1f},{t2_deg_left:.1f},{t3_deg_left:.1f},{roll_left:.1f}"
         pub("jambe_G", message_left)
 
         # Jambe DROITE
         t1_deg_right = math.degrees(leg_right.theta1)
         t2_deg_right = math.degrees(leg_right.theta2)
         t3_deg_right = math.degrees(leg_right.theta3)
-        yaw_right = timeline_yaw_right.get_current_angle()
-        message_right = f"{t1_deg_right:.1f},{t2_deg_right:.1f},{t3_deg_right:.1f},{yaw_right:.1f}"
+        roll_right = timeline_yaw_right.get_current_angle()
+        message_right = f"{t1_deg_right:.1f},{t2_deg_right:.1f},{t3_deg_right:.1f},{roll_right:.1f}"
         pub("jambe_D", message_right)
 
         msg_count += 1
@@ -876,6 +904,14 @@ def main():
         actual_fps = clock.get_fps()
         fps_text = font.render(f"FPS: {actual_fps:.1f}", True, RED)
         screen.blit(fps_text, (WIDTH - 120, 10))
+
+
+
+        # ========== AFFICHAGE POSITION SOURIS ==========
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        cart_x, cart_y = screen_to_cartesian(mouse_x, mouse_y)
+        mouse_text = font.render(f"({mouse_x}, {mouse_y})" , True, BLUE)
+        screen.blit(mouse_text, (WIDTH - 230, 10))
 
         # ========== DESSIN GRILLE ET WORKSPACE ==========
         draw_cartesian_grid(screen)
@@ -954,10 +990,10 @@ def main():
         timeline_yaw_left.draw(screen, draw_background=True)
 
         # Dessiner SEULEMENT la courbe ROUGE par-dessus (jambe droite)
-        timeline_yaw_right.draw(screen, draw_background=False)
+        timeline_yaw_right.draw(screen, draw_background=True)
 
         # Légende
-        legend_y = 560
+        legend_y = 520
         pygame.draw.circle(screen, GREEN, (600, legend_y), 8)
         legend_left = font.render("Jambe Gauche (ctrl)", True, GREEN)
         screen.blit(legend_left, (620, legend_y - 10))
@@ -969,16 +1005,16 @@ def main():
         # ========== DESSIN CONTROLES DURATION TIME ==========
         # Titre
         title_text = font.render("Duration time", True, BLACK)
-        screen.blit(title_text, (10, HEIGHT - 110))
+        screen.blit(title_text, (10, pos_boutton))
 
         # Fond
-        duration_bg = pygame.Rect(10, HEIGHT - 90, 110, 90)
+        duration_bg = pygame.Rect(10, pos_boutton + 20, 110, 90)
         pygame.draw.rect(screen, WHITE, duration_bg)
         pygame.draw.rect(screen, BLACK, duration_bg, 2)
 
         # Texte durée
         duration_text = font.render(f"{leg_left.animation_duration:.2f}s", True, BLACK)
-        screen.blit(duration_text, (25, HEIGHT - 30))
+        screen.blit(duration_text, (25, pos_boutton + 30))
 
         # Bouton diminuer (-)
         pygame.draw.rect(screen, (200, 100, 100), btn_decrease)
@@ -995,16 +1031,16 @@ def main():
         # ========== DESSIN CONTROLES ELLIPSE RADIUS X ==========
         # Titre
         radius_title_text = font.render("Ellipse Radius X", True, BLACK)
-        screen.blit(radius_title_text, (130, HEIGHT - 110))
+        screen.blit(radius_title_text, (130, pos_boutton))
 
         # Fond
-        radius_bg = pygame.Rect(130, HEIGHT - 90, 110, 90)
+        radius_bg = pygame.Rect(130, pos_boutton + 20, 110, 90)
         pygame.draw.rect(screen, WHITE, radius_bg)
         pygame.draw.rect(screen, BLACK, radius_bg, 2)
 
         # Texte rayon
         radius_text = font.render(f"{leg_left.ellipse_radius_x:.0f}mm", True, BLACK)
-        screen.blit(radius_text, (145, HEIGHT - 30))
+        screen.blit(radius_text, (145, pos_boutton + 30))
 
         # Bouton diminuer (-)
         pygame.draw.rect(screen, (200, 100, 100), btn_radius_decrease)
@@ -1027,7 +1063,7 @@ def main():
     # 💾 SAUVEGARDE AVANT DE QUITTER
     save_config(timeline_yaw_left, timeline_yaw_right, leg_left)
 
-    
+
     # ========== ARRET PROPRE ==========
     stop_mqtt()
     pygame.quit()

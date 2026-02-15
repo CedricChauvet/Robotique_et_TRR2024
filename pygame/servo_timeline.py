@@ -60,7 +60,7 @@ class ServoTimeline:
         self.loop_animation = True
         
         # Options d'affichage
-        self.show_tangents = True
+        self.show_tangents = False
         
         # Interface
         self.selected_keyframe = None
@@ -239,12 +239,12 @@ class ServoTimeline:
                             (cursor_x, self.timeline_rect.top),
                             (cursor_x, self.timeline_rect.bottom), 2)
             
-            time_text = f"t={self.current_time:.2f}s"
-            angle_text = f"{current_angle:.1f}°"
-            time_surf = self.font_small.render(time_text, True, self.colorSPline)
-            angle_surf = self.font_small.render(angle_text, True, self.colorSPline)
-            screen.blit(time_surf, (cursor_x + 5, self.timeline_rect.top - 25))
-            screen.blit(angle_surf, (cursor_x + 5, self.timeline_rect.top - 10))
+            #time_text = f"t={self.current_time:.2f}s"
+            #angle_text = f"{current_angle:.1f}°"
+            #time_surf = self.font_small.render(time_text, True, self.colorSPline)
+            #angle_surf = self.font_small.render(angle_text, True, self.colorSPline)
+            #screen.blit(time_surf, (cursor_x + 5, self.timeline_rect.top - 25))
+            #screen.blit(angle_surf, (cursor_x + 5, self.timeline_rect.top - 10))
         """
         # Curseur en opposition de phase (ligne rouge, décalé de +0.5)
         opposite_time = (self.current_time + 0.5) % 1.0
