@@ -517,13 +517,13 @@ def draw_ui(screen, leg_left, leg_right, timeline_yaw_left, timeline_yaw_right, 
         f"θ1 (Segment 1): {math.degrees(leg_left.theta1):7.1f}° ",
         f"θ2 (Segment 2): {math.degrees(leg_left.theta2):7.1f}° ",
         f"θ3 (Segment 3): {math.degrees(leg_left.theta3):7.1f}°",
-        f"roll_left: {timeline_yaw_left.get_current_angle():7.1f}°",
+        f"roll_right: {timeline_yaw_left.get_current_angle():7.1f}°",
         "",
         f"jambe DROITE",
         f"θ1 (Segment 1): {math.degrees(leg_right.theta1):7.1f}° ",
         f"θ2 (Segment 2): {math.degrees(leg_right.theta2):7.1f}° ",
         f"θ3 (Segment 3): {math.degrees(leg_right.theta3):7.1f}°",
-        f"roll_right: {timeline_yaw_right.get_current_angle():7.1f}°",
+        f"roll_left: {timeline_yaw_right.get_current_angle():7.1f}°",
         "",
         # f"Dimensions reelles: L1={L1}mm | L2={L2}mm | L3={L3}mm",
     ]
@@ -585,27 +585,27 @@ def main():
     leg_right = RobotLeg(*place_leg_at_cartesian(0, L1 +L2 + L3))
     
     # ========== CREATION TIMELINE ==========
-    timeline_yaw_left = ServoTimeline(
+    timeline_yaw_right = ServoTimeline(
         position=(600, 550),
         size=(600, 300),
         angle_range=(-40, 40),
         duration=leg_left.animation_duration,
         colorSPline=GREEN,
     )
-    timeline_yaw_left.keyframes = [
+    timeline_yaw_right.keyframes = [
         Keyframe(0.0, 0),
         Keyframe(0.5, 0),
         Keyframe(1.0, 0)
     ]
     
-    timeline_yaw_right = ServoTimeline(
+    timeline_yaw_left = ServoTimeline(
         position=(600, 550),
         size=(600, 300),
         angle_range=(-40, 40),
         duration=leg_left.animation_duration,
         colorSPline=RED,
     )
-    timeline_yaw_right.keyframes = [
+    timeline_yaw_left.keyframes = [
         Keyframe(0.0, 20),
         Keyframe(0.5, 20),
         Keyframe(1.0, 20)
@@ -995,11 +995,11 @@ def main():
         # Légende
         legend_y = 520
         pygame.draw.circle(screen, GREEN, (600, legend_y), 8)
-        legend_left = font.render("Jambe Gauche (ctrl)", True, GREEN)
+        legend_left = font.render("Jambe droite (ctrl)", True, GREEN)
         screen.blit(legend_left, (620, legend_y - 10))
 
         pygame.draw.circle(screen, RED, (800, legend_y), 8)
-        legend_right = font.render("Jambe Droite (alt)", True, RED)
+        legend_right = font.render("Jambe gauche (alt)", True, RED)
         screen.blit(legend_right, (820, legend_y - 10))
         
         # ========== DESSIN CONTROLES DURATION TIME ==========
