@@ -127,7 +127,7 @@ HEIGHT = int(SCREEN_HEIGHT * 0.85)  # 85% pour laisser place à la barre de tâc
 
 print(f"📐 Résolution écran: {SCREEN_WIDTH}x{SCREEN_HEIGHT}")
 print(f"📐 Fenêtre pygame: {WIDTH}x{HEIGHT}")
-FPS = 30
+FPS = 25
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)

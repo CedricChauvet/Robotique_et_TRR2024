@@ -196,16 +196,26 @@ void loop() {
     
     // Offset des canaux selon la jambe
     if (one == "G"){
+      /*
+      // Nouvelles valeurs
+      pwm.writeMicroseconds(4, ms1 + 199);
+      pwm.writeMicroseconds(5, ms2 + 16);
+      pwm.writeMicroseconds(6, ms3 + 213);
+      pwm.writeMicroseconds(7, ms4 + 169);
+      */
+      
+      //anciennes valeurs
       pwm.writeMicroseconds(4, ms1 + 155);
       pwm.writeMicroseconds(5, ms2 + 125);
       pwm.writeMicroseconds(6, ms3 + 194);
       pwm.writeMicroseconds(7, ms4 + 160);
+      
     }
     else if (one == "D"){
-    pwm.writeMicroseconds(0, ms1 + 62);
-    pwm.writeMicroseconds(1, ms2 + 62);
-    pwm.writeMicroseconds(2, ms3 + 62);
-    pwm.writeMicroseconds(3, ms4);
+    pwm.writeMicroseconds(0, ms1 + 96);
+    pwm.writeMicroseconds(1, ms2 + 141);
+    pwm.writeMicroseconds(2, ms3 + 96);
+    pwm.writeMicroseconds(3, ms4 + 8);
   }
   delay(12);
   int t1 = millis();
