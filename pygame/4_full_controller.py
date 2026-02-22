@@ -513,13 +513,13 @@ def draw_ui(screen, leg_left, leg_right, timeline_yaw_left, timeline_yaw_right, 
         f"Pied Gauche (repere): X={cart_x:.1f}mm  Y={(cart_y - center_y):.1f}mm",
         f"Pied Droit (repere): X={cart_x_right:.1f}mm  Y={(cart_y_right - center_y) :.1f}  mm",
         "",
-        f"jambe GAUCHE",
+        f"jambe DROITE",
         f"θ1 (Segment 1): {math.degrees(leg_left.theta1):7.1f}° ",
         f"θ2 (Segment 2): {math.degrees(leg_left.theta2):7.1f}° ",
         f"θ3 (Segment 3): {math.degrees(leg_left.theta3):7.1f}°",
         f"roll_right: {timeline_yaw_left.get_current_angle():7.1f}°",
         "",
-        f"jambe DROITE",
+        f"jambe GAUCHE",
         f"θ1 (Segment 1): {math.degrees(leg_right.theta1):7.1f}° ",
         f"θ2 (Segment 2): {math.degrees(leg_right.theta2):7.1f}° ",
         f"θ3 (Segment 3): {math.degrees(leg_right.theta3):7.1f}°",
@@ -925,13 +925,13 @@ def main():
             # Point ROUGE (jambe droite, opposition)
             t_right = (t + 0.5) % 1.0
             target_x_right, target_y_right = leg_right.get_ellipse_position(t_right)
-            pygame.draw.circle(screen, RED, (int(target_x_right), int(target_y_right)), 12, 3)
-            pygame.draw.circle(screen, RED, (int(target_x_right), int(target_y_right)), 6)
+            pygame.draw.circle(screen, GREEN, (int(target_x_right), int(target_y_right)), 12, 3)
+            pygame.draw.circle(screen, GREEN, (int(target_x_right), int(target_y_right)), 6)
             
             # Point VERT (jambe gauche, principale)
             target_x_left, target_y_left = leg_left.get_ellipse_position(t)
-            pygame.draw.circle(screen, GREEN, (int(target_x_left), int(target_y_left)), 12, 3)
-            pygame.draw.circle(screen, GREEN, (int(target_x_left), int(target_y_left)), 6)
+            pygame.draw.circle(screen, RED, (int(target_x_left), int(target_y_left)), 12, 3)
+            pygame.draw.circle(screen, RED, (int(target_x_left), int(target_y_left)), 6)
         
 
 
