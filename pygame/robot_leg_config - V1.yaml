@@ -1,15 +1,15 @@
 timeline_yaw_left:
   keyframes:
-  - time: 0.01
-    angle: -12.833333333333332
-  - time: 0.9433333333333334
-    angle: -10.666666666666666
+  - time: 0.005
+    angle: -9.866666666666667
+  - time: 0.9666666666666667
+    angle: -3.1999999999999957
   - time: 0.03666666666666667
     angle: -19.46666666666667
   - time: 0.5333333333333333
     angle: 4.800000000000004
-  - time: 0.9983333333333333
-    angle: -13.333333333333334
+  - time: 0.995
+    angle: -12.266666666666666
   - time: 0.46
     angle: -7.200000000000003
 timeline_yaw_right:
@@ -27,7 +27,7 @@ timeline_yaw_right:
   - time: 0.9983333333333333
     angle: 0.7999999999999972
 animation:
-  duration: 11.0
+  duration: 15.5
 ellipse:
   center_x: 0
   center_y: 40

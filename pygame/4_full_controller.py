@@ -127,7 +127,7 @@ HEIGHT = int(SCREEN_HEIGHT * 0.85)  # 85% pour laisser place à la barre de tâc
 
 print(f"📐 Résolution écran: {SCREEN_WIDTH}x{SCREEN_HEIGHT}")
 print(f"📐 Fenêtre pygame: {WIDTH}x{HEIGHT}")
-FPS = 25
+FPS = 40
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -588,7 +588,7 @@ def main():
     timeline_yaw_right = ServoTimeline(
         position=(600, 550),
         size=(600, 300),
-        angle_range=(-40, 40),
+        angle_range=(-25, 25),
         duration=leg_left.animation_duration,
         colorSPline=GREEN,
     )
@@ -601,7 +601,7 @@ def main():
     timeline_yaw_left = ServoTimeline(
         position=(600, 550),
         size=(600, 300),
-        angle_range=(-40, 40),
+        angle_range=(-25, 25),
         duration=leg_left.animation_duration,
         colorSPline=RED,
     )
@@ -994,12 +994,12 @@ def main():
 
         # Légende
         legend_y = 520
-        pygame.draw.circle(screen, GREEN, (600, legend_y), 8)
-        legend_left = font.render("Jambe droite (ctrl)", True, GREEN)
+        pygame.draw.circle(screen, RED, (600, legend_y), 8)
+        legend_left = font.render("Jambe droite (ctrl)", True, RED)
         screen.blit(legend_left, (620, legend_y - 10))
 
-        pygame.draw.circle(screen, RED, (800, legend_y), 8)
-        legend_right = font.render("Jambe gauche (alt)", True, RED)
+        pygame.draw.circle(screen, GREEN, (800, legend_y), 8)
+        legend_right = font.render("Jambe gauche (alt)", True, GREEN)
         screen.blit(legend_right, (820, legend_y - 10))
         
         # ========== DESSIN CONTROLES DURATION TIME ==========

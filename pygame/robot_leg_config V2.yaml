@@ -27,7 +27,7 @@ timeline_yaw_right:
   - time: 0.9983333333333333
     angle: 0.7999999999999972
 animation:
-  duration: 11.0
+  duration: 15.5
 ellipse:
   center_x: 0
   center_y: 40
