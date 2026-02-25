@@ -195,7 +195,7 @@ void loop() {
     int ms4 = constrain(map(yaw, -135, 135, 500, 2500), 500, 2500);
     
     // Offset des canaux selon la jambe
-    if (one == "G"){
+    if (one == "D"){
       /*
       // Nouvelles valeurs
       pwm.writeMicroseconds(4, ms1 + 199);
@@ -211,7 +211,7 @@ void loop() {
       pwm.writeMicroseconds(7, ms4 + 160);
       
     }
-    else if (one == "D"){
+    else if (one == "G"){
     pwm.writeMicroseconds(0, ms1 + 96);
     pwm.writeMicroseconds(1, ms2 + 141);
     pwm.writeMicroseconds(2, ms3 + 96);
