@@ -1,0 +1,35 @@
+timeline_yaw_left:
+  keyframes:
+  - time: 0.005
+    angle: -9.866666666666667
+  - time: 0.9666666666666667
+    angle: -3.1999999999999957
+  - time: 0.03666666666666667
+    angle: -19.46666666666667
+  - time: 0.5333333333333333
+    angle: 4.800000000000004
+  - time: 0.995
+    angle: -12.266666666666666
+  - time: 0.46
+    angle: -7.200000000000003
+timeline_yaw_right:
+  keyframes:
+  - time: 0.0
+    angle: -0.2666666666666657
+  - time: 0.96
+    angle: 7.199999999999996
+  - time: 0.03833333333333333
+    angle: -4.533333333333331
+  - time: 0.46166666666666667
+    angle: 6.133333333333333
+  - time: 0.5516666666666666
+    angle: 20.0
+  - time: 0.9983333333333333
+    angle: 0.7999999999999972
+animation:
+  duration: 15.5
+ellipse:
+  center_x: 0
+  center_y: 40
+  radius_x: 50
+  radius_y: 10
