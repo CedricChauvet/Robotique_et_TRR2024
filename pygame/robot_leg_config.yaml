@@ -1,4 +1,4 @@
-timeline_yaw_left:
+timeline_yaw_right:
   keyframes:
   - time: 0.00
     angle: 0.0
@@ -12,11 +12,15 @@ timeline_yaw_left:
     angle: -20.0
   - time: 0.94
     angle: -20.0
+  - time: 0.97
+    angle: -20.0
   - time: 1.00
     angle: 0.0
-timeline_yaw_right:
+timeline_yaw_left:
   keyframes:
   - time: 0.00
+    angle: -20.0
+  - time: 0.03
     angle: 20.0
   - time: 0.47
     angle: 20.0
@@ -24,9 +28,10 @@ timeline_yaw_right:
     angle: 0.0
   - time: 0.94
     angle: 0.0
+  - time: 0.97
+    angle: -20.0
   - time: 1.00
-    angle: 20.0
-    
+    angle: -20.0
 animation:
   duration: 15.5
 ellipse:

@@ -307,6 +307,24 @@ class RobotLeg:
         
         return cartesian_to_screen(x, y)
         
+
+    def get_cycloid_position(self, t):
+        t = t % 1.0
+
+        if t <= 0.5:
+            phase = t / 0.5
+            x = self.ellipse_center_x + self.ellipse_radius_x * (1.0 - 2.0 * phase)
+            y = self.ellipse_center_y  # même plancher que draw
+
+        else:
+            phase = (t - 0.5) / 0.5
+            angle = math.pi + math.pi * phase
+            x = self.ellipse_center_x + self.ellipse_radius_x * math.cos(angle)
+            y = self.ellipse_center_y - self.ellipse_radius_y * math.sin(angle)  # même signe que draw
+
+        return cartesian_to_screen(x, y)
+
+
     def forward_kinematics(self):
         """Calcule la position de chaque articulation (cinematique directe)
         Convention : theta = 0 correspond a la verticale vers le bas
@@ -450,26 +468,34 @@ class RobotLeg:
         
         # Dessiner les cercles avec le nouveau centre
         pygame.draw.circle(screen, GRAY, screen_center, int(L1_DISPLAY + L2_DISPLAY), 1)
-    
-    def draw_ellipse_trajectory(self, screen):
-        """Dessine la trajectoire elliptique horizontale"""
-        color = YELLOW if self.animation_active else (100, 100, 100)
         
-        # Générer des points sur l'ellipse en coordonnées cartésiennes
+    def draw_ellipse_trajectory(self, screen):
+        """Dessine la trajectoire cycloid en D (sol droit + air en arc)"""
+        color = YELLOW if self.animation_active else (100, 100, 100)
         points = []
         num_points = 100
-        
+
         for i in range(num_points + 1):
-            angle = 2 * math.pi * i / num_points
-            x = self.ellipse_center_x + self.ellipse_radius_x * math.cos(angle)
-            y = self.ellipse_center_y + self.ellipse_radius_y * math.sin(angle)
-            screen_pos = cartesian_to_screen(x, y)
-            points.append(screen_pos)
-        
-        # Dessiner l'ellipse
+            t = i / num_points
+
+            if t <= 0.5:
+                # Phase sol : ligne droite au plancher
+                phase = t / 0.5
+                x = self.ellipse_center_x + self.ellipse_radius_x * (1.0 - 2.0 * phase)
+                y = self.ellipse_center_y  # plancher fixe
+
+            else:
+                # Phase air : demi-ellipse vers le haut
+                phase = (t - 0.5) / 0.5
+                angle = math.pi + math.pi * phase  # π → 2π
+                x = self.ellipse_center_x + self.ellipse_radius_x * math.cos(angle)
+                y = self.ellipse_center_y - self.ellipse_radius_y * math.sin(angle)
+
+            points.append(cartesian_to_screen(x, y))
+
         pygame.draw.lines(screen, color, True, points, 2)
-        
-        # Dessiner le centre
+
+        # Centre
         screen_center = cartesian_to_screen(self.ellipse_center_x, self.ellipse_center_y)
         pygame.draw.circle(screen, color, (int(screen_center[0]), int(screen_center[1])), 4)
 
@@ -514,16 +540,16 @@ def draw_ui(screen, leg_left, leg_right, timeline_yaw_left, timeline_yaw_right, 
         f"Pied Droit (repere): X={cart_x_right:.1f}mm  Y={(cart_y_right - center_y) :.1f}  mm",
         "",
         f"jambe DROITE",
-        f"θ1 (Segment 1): {math.degrees(leg_left.theta1):7.1f}° ",
-        f"θ2 (Segment 2): {math.degrees(leg_left.theta2):7.1f}° ",
-        f"θ3 (Segment 3): {math.degrees(leg_left.theta3):7.1f}°",
-        f"roll_right: {timeline_yaw_left.get_current_angle():7.1f}°",
-        "",
-        f"jambe GAUCHE",
         f"θ1 (Segment 1): {math.degrees(leg_right.theta1):7.1f}° ",
         f"θ2 (Segment 2): {math.degrees(leg_right.theta2):7.1f}° ",
         f"θ3 (Segment 3): {math.degrees(leg_right.theta3):7.1f}°",
-        f"roll_left: {timeline_yaw_right.get_current_angle():7.1f}°",
+        f"roll_right: {timeline_yaw_right.get_current_angle():7.1f}°",
+        "",
+        f"jambe GAUCHE",
+        f"θ1 (Segment 1): {math.degrees(leg_left.theta1):7.1f}° ",
+        f"θ2 (Segment 2): {math.degrees(leg_left.theta2):7.1f}° ",
+        f"θ3 (Segment 3): {math.degrees(leg_left.theta3):7.1f}°",
+        f"roll_left: {timeline_yaw_left.get_current_angle():7.1f}°",
         "",
         # f"Dimensions reelles: L1={L1}mm | L2={L2}mm | L3={L3}mm",
     ]
@@ -590,7 +616,7 @@ def main():
         size=(600, 300),
         angle_range=(-25, 25),
         duration=leg_left.animation_duration,
-        colorSPline=GREEN,
+        colorSPline=RED,
     )
     timeline_yaw_right.keyframes = [
         Keyframe(0.0, 0),
@@ -603,7 +629,7 @@ def main():
         size=(600, 300),
         angle_range=(-25, 25),
         duration=leg_left.animation_duration,
-        colorSPline=RED,
+        colorSPline=GREEN,
     )
     timeline_yaw_left.keyframes = [
         Keyframe(0.0, 20),
@@ -812,12 +838,12 @@ def main():
             t = leg_left.animation_time / leg_left.animation_duration
             
             # JAMBE GAUCHE
-            target_x_left, target_y_left = leg_left.get_ellipse_position(t)
+            target_x_left, target_y_left = leg_left.get_cycloid_position(t)
             leg_left.inverse_kinematics_foot(target_x_left, target_y_left)
             
             # JAMBE DROITE (opposition de phase)
             t_right = (t + 0.5) % 1.0
-            target_x_right, target_y_right = leg_right.get_ellipse_position(t_right)
+            target_x_right, target_y_right = leg_right.get_cycloid_position(t_right)
             leg_right.inverse_kinematics_foot(target_x_right, target_y_right)
         
         # Mode cartésien : contrôle avec flèches
@@ -924,12 +950,12 @@ def main():
             
             # Point ROUGE (jambe droite, opposition)
             t_right = (t + 0.5) % 1.0
-            target_x_right, target_y_right = leg_right.get_ellipse_position(t_right)
+            target_x_right, target_y_right = leg_right.get_cycloid_position(t_right)
             pygame.draw.circle(screen, GREEN, (int(target_x_right), int(target_y_right)), 12, 3)
             pygame.draw.circle(screen, GREEN, (int(target_x_right), int(target_y_right)), 6)
             
             # Point VERT (jambe gauche, principale)
-            target_x_left, target_y_left = leg_left.get_ellipse_position(t)
+            target_x_left, target_y_left = leg_left.get_cycloid_position(t)
             pygame.draw.circle(screen, RED, (int(target_x_left), int(target_y_left)), 12, 3)
             pygame.draw.circle(screen, RED, (int(target_x_left), int(target_y_left)), 6)
         
@@ -994,13 +1020,13 @@ def main():
 
         # Légende
         legend_y = 520
-        pygame.draw.circle(screen, RED, (600, legend_y), 8)
-        legend_left = font.render("Jambe droite (ctrl)", True, RED)
-        screen.blit(legend_left, (620, legend_y - 10))
+        pygame.draw.circle(screen, RED, (800, legend_y), 8)
+        legend_left = font.render("Jambe droite (alt)", True, RED)
+        screen.blit(legend_left, (820, legend_y - 10))
 
-        pygame.draw.circle(screen, GREEN, (800, legend_y), 8)
-        legend_right = font.render("Jambe gauche (alt)", True, GREEN)
-        screen.blit(legend_right, (820, legend_y - 10))
+        pygame.draw.circle(screen, GREEN, (600, legend_y), 8)
+        legend_right = font.render("Jambe gauche (ctrl)", True, GREEN)
+        screen.blit(legend_right, (620, legend_y - 10))
         
         # ========== DESSIN CONTROLES DURATION TIME ==========
         # Titre

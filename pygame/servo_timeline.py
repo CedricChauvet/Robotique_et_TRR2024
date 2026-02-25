@@ -8,8 +8,7 @@ VERSION OPTIMISÉE - Cache de spline pour performances
 
 import pygame
 import math
-import numpy as np
-from scipy.interpolate import CubicHermiteSpline
+
 
 # Couleurs
 WHITE = (255, 255, 255)
@@ -70,9 +69,7 @@ class ServoTimeline:
         # Font
         self.font_small = pygame.font.Font(None, 20)
         
-        # ✅ OPTIMISATION : Cache pour la spline
-        self._spline_cache = None
-        self._keyframes_hash = None
+
     
     def get_current_angle(self):
         """Retourne l'angle actuel interpolé"""
@@ -82,46 +79,32 @@ class ServoTimeline:
         """Retourne l'angle en opposition de phase (+0.5), abandonné :/ """
         opposite_time = (self.current_time + 0.5) % 1.0
         return self.interpolate_angle(opposite_time)
-    
-    def _get_cached_spline(self):
-        """Retourne la spline (avec cache pour éviter recalculs)"""
-        # Calculer un hash des keyframes pour détecter les changements
-        sorted_kf = sorted(self.keyframes, key=lambda k: k.time)
-        current_hash = tuple((kf.time, kf.angle) for kf in sorted_kf)
         
-        # Si les keyframes ont changé, recalculer la spline
-        if current_hash != self._keyframes_hash:
-            if len(sorted_kf) < 2:
-                self._spline_cache = None
-            else:
-                times = np.array([kf.time for kf in sorted_kf])
-                angles = np.array([kf.angle for kf in sorted_kf])
-                derivatives = np.zeros(len(times))
-                self._spline_cache = CubicHermiteSpline(times, angles, derivatives)
-            
-            self._keyframes_hash = current_hash
         
-        return self._spline_cache
-    
     def interpolate_angle(self, time):
-        """Interpolation par spline cubique avec dérivées nulles aux keyframes"""
+        """Interpolation linéaire entre keyframes (segments droits)"""
         sorted_kf = sorted(self.keyframes, key=lambda k: k.time)
-        
+
         if len(sorted_kf) < 2:
             return sorted_kf[0].angle if sorted_kf else 0
-        
+
+        # Bornes
         if time <= sorted_kf[0].time:
             return sorted_kf[0].angle
         if time >= sorted_kf[-1].time:
             return sorted_kf[-1].angle
-        
-        # ✅ OPTIMISATION : Utiliser le cache au lieu de recalculer
-        spline = self._get_cached_spline()
-        if spline is None:
-            return 0
-        
-        # Évaluer la spline au temps donné
-        return float(spline(time))
+
+        # Trouver les deux keyframes encadrantes
+        for i in range(len(sorted_kf) - 1):
+            kf_a = sorted_kf[i]
+            kf_b = sorted_kf[i + 1]
+
+            if kf_a.time <= time <= kf_b.time:
+                # Interpolation linéaire simple
+                t_norm = (time - kf_a.time) / (kf_b.time - kf_a.time)
+                return kf_a.angle + t_norm * (kf_b.angle - kf_a.angle)
+
+        return sorted_kf[-1].angle
     
     def time_to_x(self, time):
         """Convertit un temps [0,1] en coordonnée X"""
