@@ -30,6 +30,6 @@ animation:
   duration: 5.0
 ellipse:
   center_x: 0
-  center_y: 50
+  center_y: 40
   radius_x: 50
   radius_y: 5
