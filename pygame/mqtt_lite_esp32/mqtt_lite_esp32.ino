@@ -213,9 +213,9 @@ void loop() {
     }
     else if (one == "G"){
     pwm.writeMicroseconds(0, ms1 + 96);
-    pwm.writeMicroseconds(1, ms2 + 141);
-    pwm.writeMicroseconds(2, ms3 + 96);
-    pwm.writeMicroseconds(3, ms4 + 8);
+    pwm.writeMicroseconds(1, ms2 + 92);
+    pwm.writeMicroseconds(2, ms3 + 67);
+    pwm.writeMicroseconds(3, ms4 - 6);
   }
   delay(12);
   int t1 = millis();

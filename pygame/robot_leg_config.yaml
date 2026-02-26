@@ -31,5 +31,5 @@ animation:
 ellipse:
   center_x: 0
   center_y: 40
-  radius_x: 70
+  radius_x: 75
   radius_y: 5
