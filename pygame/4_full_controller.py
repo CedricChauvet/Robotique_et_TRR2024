@@ -123,8 +123,9 @@ SCREEN_HEIGHT = info.current_h
 
 # Utiliser 90% de la taille d'écran avec marges
 WIDTH = int(SCREEN_WIDTH * 0.9)
+WIDTH = 1300
 HEIGHT = int(SCREEN_HEIGHT * 0.85)  # 85% pour laisser place à la barre de tâches
-
+HEIGHT = 900
 print(f"📐 Résolution écran: {SCREEN_WIDTH}x{SCREEN_HEIGHT}")
 print(f"📐 Fenêtre pygame: {WIDTH}x{HEIGHT}")
 FPS = 28
@@ -593,6 +594,61 @@ def draw_ui(screen, leg_left, leg_right, timeline_yaw_left, timeline_yaw_right, 
         surface = font.render(text, True, color)
         screen.blit(surface, (10, y_offset + i * 25))
 
+
+def save_ellipse_trajectory(leg_left, leg_right, timeline_yaw_left, timeline_yaw_right, filename="trajectory.h"):
+    """
+    Précalcule 800 points de la trajectoire cycloid + cinématique inverse
+    et sauvegarde un tableau (800, 8) en fichier .h pour ESP32
+    Colonnes : [θ1_G, θ2_G, θ3_G, roll_G, θ1_D, θ2_D, θ3_D, roll_D]
+    """
+    num_points = 800
+    trajectory = []
+
+    for i in range(num_points):
+        t = i / num_points  # t dans [0, 1[
+
+        # ── JAMBE GAUCHE (phase t) ────────────────────────────
+        tx_left, ty_left = leg_left.get_cycloid_position(t)
+        leg_left.inverse_kinematics_foot(tx_left, ty_left)
+        t1_G = math.degrees(leg_left.theta1)
+        t2_G = math.degrees(leg_left.theta2)
+        t3_G = math.degrees(leg_left.theta3)
+        roll_G = timeline_yaw_left.interpolate_angle(t)
+
+        # ── JAMBE DROITE (opposition de phase +0.5) ───────────
+        t_right = (t + 0.5) % 1.0
+        tx_right, ty_right = leg_right.get_cycloid_position(t_right)
+        leg_right.inverse_kinematics_foot(tx_right, ty_right)
+        t1_D = math.degrees(leg_right.theta1)
+        t2_D = math.degrees(leg_right.theta2)
+        t3_D = math.degrees(leg_right.theta3)
+        roll_D = timeline_yaw_right.interpolate_angle(t_right)
+
+        trajectory.append([t1_G, t2_G, t3_G, roll_G, t1_D, t2_D, t3_D, roll_D])
+
+    # ── SAUVEGARDE fichier .h pour ESP32 ──────────────────────
+    try:
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write("// Trajectoire précalculée - généré automatiquement\n")
+            f.write("// Colonnes : [θ1_G, θ2_G, θ3_G, roll_G, θ1_D, θ2_D, θ3_D, roll_D]\n")
+            f.write(f"// {num_points} points, 8 servos\n\n")
+            f.write("#pragma once\n\n")
+            f.write(f"#define TRAJECTORY_SIZE {num_points}\n")
+            f.write(f"#define SERVO_COUNT 8\n\n")
+            f.write("const float trajectory[TRAJECTORY_SIZE][SERVO_COUNT] = {\n")
+
+            for i, row in enumerate(trajectory):
+                vals = ", ".join(f"{v:8.3f}" for v in row)
+                comma = "," if i < num_points - 1 else ""
+                f.write(f"    {{{vals}}}{comma}  // t={i/num_points:.4f}\n")
+
+            f.write("};\n")
+
+        print(f"✅ Trajectoire sauvegardée dans '{filename}' ({num_points} points x 8 servos)")
+
+    except Exception as e:
+        print(f"❌ Erreur sauvegarde trajectoire: {e}")
+
 # ==================== FONCTION PRINCIPALE ====================
 def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -657,6 +713,26 @@ def main():
     btn_radius_decrease = pygame.Rect(140, pos_boutton + 55, 40, 40)
     btn_radius_increase = pygame.Rect(190, pos_boutton + 55, 40, 40)
 
+
+
+
+
+
+
+    # ========== PRÉCALCUL TRAJECTOIRE ESP32 ==========
+    save_ellipse_trajectory(leg_left, leg_right, timeline_yaw_left, timeline_yaw_right)
+
+    # Reset position après précalcul
+    leg_left.theta1 = leg_left.theta2 = leg_left.theta3 = 0.0
+    leg_right.theta1 = leg_right.theta2 = leg_right.theta3 = 0.0
+    joints_left = leg_left.forward_kinematics()
+    leg_left.foot_x, leg_left.foot_y = joints_left[3]
+    joints_right = leg_right.forward_kinematics()
+    leg_right.foot_x, leg_right.foot_y = joints_right[3]
+
+
+
+
     # ========== VARIABLES DE CONTROLE ==========
     msg_count = 0
     last_report = pygame.time.get_ticks()
@@ -664,6 +740,7 @@ def main():
     toggle = False
     running = True
     
+
     # ==================== BOUCLE PRINCIPALE ====================
     while running:
         # ========== GESTION DES ÉVÉNEMENTS ==========
