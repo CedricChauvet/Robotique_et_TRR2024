@@ -622,7 +622,7 @@ def save_ellipse_trajectory(leg_left, leg_right, timeline_yaw_left, timeline_yaw
         t1_D = math.degrees(leg_right.theta1)
         t2_D = math.degrees(leg_right.theta2)
         t3_D = math.degrees(leg_right.theta3)
-        roll_D = timeline_yaw_right.interpolate_angle(t_right)
+        roll_D = roll_G
 
         trajectory.append([t1_G, t2_G, t3_G, roll_G, t1_D, t2_D, t3_D, roll_D])
 
