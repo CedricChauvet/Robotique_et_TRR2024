@@ -4,7 +4,7 @@
 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 
-int num_lignes=800; // taille du tableau dans trakectory.h
+int num_lignes=TRAJECTORY_SIZE; // taille du tableau dans trakectory.h
 int dest_lignes=800; // nombre de positions pour le robot
 
 float theta1_G ; int micros1_G;
@@ -64,5 +64,4 @@ for (int i = 0; i < dest_lignes; i++) {
 void debug() {
   Serial.printf("theta1_G %.2f theta2_G %.2f theta3_G %.2f roll_G %.2f \n", theta1_G, theta2_G,theta3_G, roll_G );
   Serial.printf("theta1_D %.2f theta2_D %.2f theta3_D %.2f roll_D %.2f \n", theta1_D, theta2_D,theta3_D, roll_D);
-  Serial.printf("%d \n\n",j);
 }
