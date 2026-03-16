@@ -10,11 +10,11 @@ int dest_lignes=800; // nombre de positions pour le robot
 float theta1_G ; int micros1_G;
 float theta2_G ; int micros2_G;
 float theta3_G ; int micros3_G;
-float roll_G ; int microsR_G;
+float roll_G ;   int microsR_G;
 float theta1_D ; int micros1_D;
 float theta2_D ; int micros2_D;
 float theta3_D ; int micros3_D;
-float roll_D ; int microsR_D;
+float roll_D ;   int microsR_D;
 
 
 void setup() {
@@ -39,7 +39,7 @@ for (int i = 0; i < dest_lignes; i++) {
   theta1_G = trajectory[i][0]; micros1_G = constrain(map(theta1_G, 135, -135, 500, 2500), 500, 2500);
   theta2_G = trajectory[i][1]; micros2_G = constrain(map(theta2_G, 135, -135, 500, 2500), 500, 2500);
   theta3_G = trajectory[i][2]; micros3_G = constrain(map(theta3_G, 135, -135, 500, 2500), 500, 2500);
-  roll_G = trajectory[i][3]; microsR_G = constrain(map(roll_G, 135, -135, 500, 2500), 500, 2500);
+  roll_G = trajectory[i][3];   microsR_G = constrain(map(roll_G, 135, -135, 500, 2500), 500, 2500);
   theta1_D = trajectory[i][4]; micros1_D = constrain(map(theta1_D, 135, -135, 500, 2500), 500, 2500);
   theta2_D = trajectory[i][5]; micros2_D = constrain(map(theta2_D, 135, -135, 500, 2500), 500, 2500);
   theta3_D = trajectory[i][6]; micros3_D = constrain(map(theta3_D, 135, -135, 500, 2500), 500, 2500);
