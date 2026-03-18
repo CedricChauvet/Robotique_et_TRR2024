@@ -71,11 +71,19 @@ float VIT;                                              // vitesse calculée en 
 float VitInt;                                           // vitesse calculée en KM/H par interrupt
 int PwmVIT=0;                     // Initialisation de la valeur du PWM pont en H
 int lastVIT=0;
-float kp=2;
+float kp=5.8;
 float kd=2;
 float corrDebug;
 int pwmMult=2.0;
 int pwmconst=0;
+unsigned long tPrec_v=0;
+float erreurPrec_v = 0.0;
+float commandePWM_v=0.0;
+float integrale_v=0.0;
+float Kp_v = 8.0;
+float Ki_v = 0.5;
+float Kd_v = 3.0;
+
                     // variables utilisées pour le freinage
 bool okFrein=false;                               // indicateur condition necessitant freinage initialisé à false
 bool neutre = false;                              // indicateur état précédent commande pont en H 
@@ -91,19 +99,19 @@ long int dfrein=5;                                // durée action freinage en m
 bool debFrein = false;                            // indicateur première boucle de freinageconsi=consiVite;
 
 float tronCon[16][2] {         // tableau 16 tronçons : cm et km/h 
-            {0,2},                        // 
-            {50,3},                       // 
-            {100,4},                      // 
-            {550,0},                     // 6m: premier portique
+            {0,5},                        // 
+            {30,5},                       // 
+            {100,5},                      // 
+            {500,0},                     // 6m: premier portique
             {1100,0},                     //  Charbonnière     
-            {3031,7},                     // portique          
-            {5462,4},                     // Portique  
-            {5562,7},                     //
-            {7893,4},                     // Portique
-            {8093,7},                     //
-            {10324,4},                    // Portique
-            {10524,7},
-            {12754,4},                    // Dernier Portique
+            {3031,0},                     // portique          
+            {5462,0},                     // Portique  
+            {5562,0},                     //
+            {7893,0},                     // Portique
+            {8093,0},                     //
+            {10324,0},                    // Portique
+            {10524,0},
+            {12754,0},                    // Dernier Portique
             {13050,0},                    // fin de course
             {132000,0},                                                
             {999999,0}                    
@@ -128,7 +136,7 @@ float l=19.5;                                      // distance en cm entre les d
 float erreur;                                     // erreur totale (erreur alpha + erreur distance)
 float lastErreur;
 float alpha=0.0;                                  // angle alpha si deux lasers latéraux
-float consigneD=50.0;                             // consigne de suivi de la bordure à la distance D
+//float consigneD=50.0;                             // consigne de suivi de la bordure à la distance D
 float consigneAlpha=0.;                           // consigne de suivi de la bordure avec un angle Alpha (= 0 en ligne droite)
 float lastAlpha=0.0;                              // erreur précédente pour calculer le delta alpha
 float lastDist=0.0;                               // erreur précédente pour calculer le delta distance
@@ -143,42 +151,44 @@ long int t1;                                      // durée d'une boucle de trat
 
 void setup() {
 Serial.begin(115200);                             //initialisation vitesse port série entre esp32 et pc
-
 MqttSetUp();                                // initialisation wifi et MQTT
-
 initSerial();                           // Initialisation des ports série et des objets tfminiPlus
 t1=micros()-t0;                                     // initialisation de t1
                 // initialisation des pins
 myservo.attach(pinServo);                         // déclaration objet myservo
 pinMode(pinTpntH,OUTPUT);                         // initialisation pin forward pont en H
 pinMode(pinTpntHrev,OUTPUT);                      // initialisation pin reverse pont en H
-
 pinMode(pinOdo,INPUT);                // initialisation pin signal hall
 attachInterrupt(pinOdo, countInterrupt,FALLING);  // appel interruption pour mesurer le nombre de tours
 movServo();                                     // mise à la position neutre du servo de direction
-delay(10000);
+delay(6000);
 Serial.println("fin setup");
 }
 
 void loop() {
   t0=micros();                                     // chargement durée début loop  
+  if( t0 - t1 > 10000)
+  {  
   litLaserAV();                                    // appel fonction lecture laser droite ou laser arrière
   litLaserAR();                                    // appel fonction lecture laser gauche ou laser avant
-  litLaserAF();                                    // appel fonction lecture laser frontal
-  litLaserAFD();                                    // appel fonction lecture laser frontal
+  //litLaserAF();                                    // appel fonction lecture laser frontal
+  //litLaserAFD();                                    // appel fonction lecture laser frontal
 Erreur();                                         // appel fonction calcul erreur de trajectoire 
 movServo();                                      // appel fonction commande servo de direction
 compteur();
 ouEstil();
-asservissement_T();
+//asservissement_T();
+asservVITPID(VIT,consi);
 motor();
-debug();                                         // appel fonction affichage infos sur console.A commenter pour exploitation en course 
+//debug();                                         // appel fonction affichage infos sur console.A commenter pour exploitation en course 
+ t1=micros();  
+    }  
 messageOut();                                    // chargement du contenu de message à publier 
 EmetMqtt();                                      // appel fonction de pubblish message pour le broker
   if (!client.connected()) {
     Serial.println("Déconnecté");
   }
-  t1=micros()-t0;                                 // chargement durée fin de boucle
+  t1=micros();                                 // chargement durée fin de boucle
 }
 
 void Erreur(){
@@ -193,11 +203,12 @@ lastAlpha = alpha;*/
 ddroit=FAV;
 dgau=FAR;
 erreur= 1*(dgau-ddroit);
-angleBraq=(-1.07*erreur)+89.36; 
+//angleBraq=(-1.07*erreur)+89.36; 
+angleBraq=89.;
 }
 
 void ouEstil() {
-  cumDist = (nbPignon)*3.1416*7.2;        // diam roue 7.2, calcul cumul de la distance en cm 
+  cumDist = (nbPignon)*3.1416*7.2/2;      // en cm, diam roue 7.2, 2 aimants,calcul cumul distance 
   for (int i=0; i <= 8;i++){ 
   if(cumDist >= tronCon[i][0] and cumDist < tronCon[i+1][0]){
   consi = tronCon[i][1];
@@ -211,11 +222,43 @@ PwmVIT=0.;
 }
 else{
   int err=consi-VIT;  
-  float corr= kp*err;                 // calcul erreur totale
-  PwmVIT= 1*(consi+corr)+20;          // calcul du PwmVIT pour obtenir la VIT du tronçon
-  //PwmVit=60;
+  float corr= 1.5*err;                 // calcul erreur totale
+  //PwmVIT= 1*(consi+corr)+20;          // calcul du PwmVIT pour obtenir la VIT du tronçon
+  PwmVit=60;
   }
-  motor(); 
+  //motor(); 
+}
+
+void asservVITPID(float VIT, float vitesseConsigne) {
+                        // Temps écoulé
+  unsigned long tNow = millis();
+  float dt = (tNow - tPrec_v) / 1000.0;  // secondes
+  if (dt < 0.001) dt = 0.001;
+                      // Erreur instantanée
+  float err = vitesseConsigne - VIT;
+                      // PID
+  integrale_v += err * dt;
+  float derivee = (err - erreurPrec_v) / dt;
+  float P = Kp_v * err;
+  float I = Ki_v * integrale_v;
+  float D = Kd_v * derivee;
+  float sortie = P + I + D;
+                      // Mémoires
+  erreurPrec_v = err;
+  tPrec_v = tNow;
+                      // Saturation PWM
+  sortie = constrain(sortie, 0, 255);
+                  // Lissage possible pour éviter à-coups
+  float alpha = 0.7;
+  commandePWM_v = alpha * commandePWM_v + (1 - alpha) * sortie;
+  if(consi>0){
+  PwmVIT = commandePWM_v;
+  
+  // Serial.print("   PwmVIT asservi  ");Serial.print(PwmVIT);
+  //PwmVIT = sortie;
+  }else {
+  PwmVIT = 0;
+  }
 }
 
 void countInterrupt(){                // fonction appelée par l'attach interrupt
@@ -228,7 +271,7 @@ if(deltaNbPignon >0){
 deltaMicro = micros() - lastMicro;
 lastNbPignon = nbPignon;
 lastMicro = micros();
-nb_tour_sec= deltaNbPignon /(deltaMicro/1000000.0);
+nb_tour_sec= ((deltaNbPignon/(deltaMicro/1000000.0))/2.;
 VIT = (nb_tour_sec*3600)*(3.1416*7.2/100000);
 cumDist = (nbPignon)*3.1416*7.2;
 }
