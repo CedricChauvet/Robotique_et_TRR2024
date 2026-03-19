@@ -1,23 +1,32 @@
 init =  (0,0,0,0,0,0,0,0) 
 
 angles = ( -69.047,   44.657,   24.390,   -0.167,   22.110,   44.657,  -66.767,   -0.167)
-
+nmb_of_steps = 10
 inter=[]
 final=[]
 
-for angle in angles:
-    #ms = 7 *angle + 1589
+for i, angle in enumerate(angles):
+    
+        #ms = 7 *angle + 1589
     #print("angle: ",angle, " micros :",ms)
     
-    
+    if i % 2 == 0:
+        for k in range(nmb_of_steps):
+            new_angle = angle / nmb_of_steps *k
+            ms = 7 *new_angle + 1589
+            inter.append(int(ms))
+        final. append(inter)
+        inter = []
+    else:   
+        
+        for k in range(nmb_of_steps):
+            new_angle = angle / nmb_of_steps *k
+            ms = -7 *new_angle + 1589
+            inter.append(int(ms))
+        final. append(inter)
+        inter = []
 
-    for k in range(5):
-        new_angle = angle / 4 *k
-        ms = 7 *new_angle + 1589
-        inter.append(int(ms))
-    final. append(inter)
-    inter = []
-print(final)
+print(str(final).replace('[', '{').replace(']', '}').replace('},', '},\n'))
 
 
 
