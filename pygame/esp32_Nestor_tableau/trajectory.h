@@ -6,9 +6,10 @@
 
 #define TRAJECTORY_SIZE 800
 #define SERVO_COUNT 8
+#define STEP_COUNT 10
+// angles = ( -69.047,   44.657,   24.390,   -0.167,   22.110,   44.657,  -66.767,   -0.167)
 
-
-const int table_depart[SERVO_COUNT][5] = {
+const int table_depart[SERVO_COUNT][STEP_COUNT] = {
 {1589, 1540, 1492, 1444, 1395, 1347, 1299, 1250, 1202, 1154},
  {1589, 1557, 1526, 1495, 1463, 1432, 1401, 1370, 1338, 1307},
  {1589, 1606, 1623, 1640, 1657, 1674, 1691, 1708, 1725, 1742},
