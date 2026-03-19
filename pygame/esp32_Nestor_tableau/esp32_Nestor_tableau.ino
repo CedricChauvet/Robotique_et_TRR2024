@@ -44,7 +44,7 @@ void setup() {
 
   delay(10000);
 
-  for (int k = 0; k < 4; k++) {
+  for (int k = 0; k < STEP_COUNT; k++) {
     int k0_G = table_depart[0][k];
     int k1_G = table_depart[1][k];
     int k2_G = table_depart[2][k];
