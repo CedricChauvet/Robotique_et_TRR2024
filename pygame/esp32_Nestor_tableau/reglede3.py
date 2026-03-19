@@ -1,6 +1,8 @@
+import numpy
+
 init =  (0,0,0,0,0,0,0,0) 
 
-angles = ( -69.047,   44.657,   24.390,   -0.167,   22.110,   44.657,  -66.767,   -0.167)
+angles = ( -69.047,   44.657,   24.390,   0.0,   22.110,   44.657,  -66.767,   0)
 nmb_of_steps = 10
 inter=[]
 final=[]
@@ -11,22 +13,24 @@ for i, angle in enumerate(angles):
     #print("angle: ",angle, " micros :",ms)
     
     if i % 2 == 0:
-        for k in range(nmb_of_steps):
-            new_angle = angle / nmb_of_steps *k
+        for k in range(nmb_of_steps+1):
+            new_angle = angle / nmb_of_steps *(k)
             ms = 7 *new_angle + 1589
-            inter.append(int(ms))
+            #inter.append(int(ms))
+            inter.append(round(new_angle,1))
         final. append(inter)
         inter = []
     else:   
         
-        for k in range(nmb_of_steps):
-            new_angle = angle / nmb_of_steps *k
+        for k in range(nmb_of_steps+1):
+            new_angle = angle / nmb_of_steps *(k)
             ms = -7 *new_angle + 1589
-            inter.append(int(ms))
+            #inter.append(int(ms))
+            inter.append(round(new_angle,1))
         final. append(inter)
         inter = []
-
-print(str(final).replace('[', '{').replace(']', '}').replace('},', '},\n'))
+final = numpy.transpose(final)
+print repr(str(final).replace('[', '{').replace(']', '}').replace('},', '},\n'))
 
 
 

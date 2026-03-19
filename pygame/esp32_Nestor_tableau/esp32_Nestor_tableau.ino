@@ -42,36 +42,35 @@ void setup() {
   pwm.writeMicroseconds(6, 1500 + 194);
   pwm.writeMicroseconds(7, 1500 + 160);
 
-  delay(10000);
+  delay(5000);
 
-  for (int k = 0; k < STEP_COUNT; k++) {
-    int k0_G = table_depart[0][k];
-    int k1_G = table_depart[1][k];
-    int k2_G = table_depart[2][k];
-    int k3_G = table_depart[3][k];
 
-    int k0_D = table_depart[4][k];
-    int k1_D = table_depart[5][k];
-    int k2_D = table_depart[6][k];
-    int k3_D = table_depart[7][k];
-    
-  pwm.writeMicroseconds(0, k0_G + 96);
-  pwm.writeMicroseconds(1, k1_G + 92);
-  pwm.writeMicroseconds(2, k2_G + 67);
-  pwm.writeMicroseconds(3, k3_G - 6);
-
-  pwm.writeMicroseconds(4, k0_D + 155);
-  pwm.writeMicroseconds(5, k1_D + 125);
-  pwm.writeMicroseconds(6, k2_D + 194);
-  pwm.writeMicroseconds(7, k3_D + 160);
-  delay(2000);
-    }
+for (int i = 0; i < STEP_COUNT; i++) {
   
+  theta1_G = table_depart[i][0]; micros1_G = constrain(map(theta1_G, 135, -135, 500, 2500), 500, 2500);
+  theta2_G = table_depart[i][1]; micros2_G = constrain(map(theta2_G, -135, 135, 500, 2500), 500, 2500);
+  theta3_G = table_depart[i][2]; micros3_G = constrain(map(theta3_G, 135, -135, 500, 2500), 500, 2500);
+  roll_G = table_depart[i][3];   microsR_G = constrain(map(roll_G, -135, 135, 500, 2500), 500, 2500);
+  theta1_D = table_depart[i][4]; micros1_D = constrain(map(theta1_D, 135, -135, 500, 2500), 500, 2500);
+  theta2_D = table_depart[i][5]; micros2_D = constrain(map(theta2_D, -135, 135, 500, 2500), 500, 2500);
+  theta3_D = table_depart[i][6]; micros3_D = constrain(map(theta3_D, 135, -135, 500, 2500), 500, 2500);
+  roll_D = table_depart[i][7];   microsR_D = constrain(map(roll_D, -135, 135, 500, 2500), 500, 2500);
 
-   //    { -69.047,   44.657,   24.390,   -0.167,   22.110,   44.657,  -66.767,   -0.167},  // t=0.0000
+  pwm.writeMicroseconds(0, micros1_G + 96);
+  pwm.writeMicroseconds(1, micros2_G + 92);
+  pwm.writeMicroseconds(2, micros3_G + 67);
+  pwm.writeMicroseconds(3, microsR_G - 6);
 
+  pwm.writeMicroseconds(4, micros1_D + 155);
+  pwm.writeMicroseconds(5, micros2_D + 125);
+  pwm.writeMicroseconds(6, micros3_D + 194);
+  pwm.writeMicroseconds(7, microsR_D + 160);
 
-  delay(30000);
+  delay(150);
+  debug();
+  }
+
+  delay(15000);
   //Serial.println("Debut du mouvement"); 
   // debut de boucle
 }
@@ -83,9 +82,6 @@ for (int i = 0; i < dest_lignes; i= i+2) {
   
   int t0 = millis();
 
-  
-//  int j = i /  ;
-//Serial.print("j  "); Serial.println(j);
   theta1_G = trajectory[i][0]; micros1_G = constrain(map(theta1_G, 135, -135, 500, 2500), 500, 2500);
   theta2_G = trajectory[i][1]; micros2_G = constrain(map(theta2_G, -135, 135, 500, 2500), 500, 2500);
   theta3_G = trajectory[i][2]; micros3_G = constrain(map(theta3_G, 135, -135, 500, 2500), 500, 2500);
@@ -105,12 +101,12 @@ for (int i = 0; i < dest_lignes; i= i+2) {
   pwm.writeMicroseconds(6, micros3_D + 194);
   pwm.writeMicroseconds(7, microsR_D + 160);
 
-  delay(5000);
+  delay(11);
   debug();
   
   int t1 = millis();
   
-  //Serial.print("Freq loop  "); Serial.println( 1000 / (t1 - t0));
+  Serial.print("Freq loop  "); Serial.println( 1000 / (t1 - t0));
   }
 }
 
