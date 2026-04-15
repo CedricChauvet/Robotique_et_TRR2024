@@ -310,7 +310,7 @@ void messageOut() {
   chaine += String(FC)         + ";";
   chaine += String(angleBraq)  + ";";
   chaine += String(PwmVIT)     + ";";
-  chaine += String(deltaMicro) + ";";
+  //chaine += String(deltaMicro) + ";";
   chaine += String(nb_tour_sec)+ ";";
   chaine += String(nbPignon)   + ";";
   chaine += String(cumDist)    + ";";
