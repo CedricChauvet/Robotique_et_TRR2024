@@ -289,33 +289,38 @@ void debug(){
   Serial.print("   Dist parcourue cm  ");Serial.print(cumDist);
   //Serial.print("   PwmVIT asservi  ");Serial.print(PwmVIT);
   Serial.print("   VIT compteur ");Serial.print(VIT );*/
-  Serial.print("   F loop  ");Serial.println(1000000/(t2-t1));       // fréquence d'exécution de la loop
+  
+  freq = 1000000/(t2-t1);
+  Serial.print("   F loop  ");Serial.println(freq);       // fréquence d'exécution de la loop
 
  }
+ 
+
 void messageOut() {
   if (consi == 0) {
-    return;  // ne pas envoyer de message si la consigne est nulle (pas de course)
+    return;
   }
-  else {  
-    if (millis() - lastMsg < 20) return;  // max 50Hz
-    lastMsg = millis();
-    chaine = " ";
-    chaine = AVG + " ";
-    chaine = chaine + AVD + " ";
-    chaine = chaine + FG + " ";
-    chaine = chaine + FD + " ";
-    chaine = chaine + FC + " ";
-    chaine = chaine + angleBraq + " ";
-    chaine = chaine + PwmVIT + " ";
-    chaine = chaine + deltaMicro + " ";
-    chaine = chaine + nb_tour_sec + " ";
-    chaine = chaine + nbPignon + " ";
-    chaine = chaine + cumDist + " ";
-    chaine = chaine + VIT + " ";
-    chaine = chaine + freq ;       // fréquence
-    Serial6.println( chaine );  // marqueur début $ et fin #
-  }
+  if (millis() - lastMsg < 20) return;  // max 50Hz
+  lastMsg = millis();
+
+  chaine  = String(AVG)        + ";";
+  chaine += String(AVD)        + ";";
+  chaine += String(FG)         + ";";
+  chaine += String(FD)         + ";";
+  chaine += String(FC)         + ";";
+  chaine += String(angleBraq)  + ";";
+  chaine += String(PwmVIT)     + ";";
+  chaine += String(deltaMicro) + ";";
+  chaine += String(nb_tour_sec)+ ";";
+  chaine += String(nbPignon)   + ";";
+  chaine += String(cumDist)    + ";";
+  chaine += String(VIT)        + ";";
+  chaine += String(freq)       + ";";
+
+  Serial6.println(chaine);
 }
+
+
 
 void mesureFreqLaser(char ID){
     tt1=micros()-tt0;
