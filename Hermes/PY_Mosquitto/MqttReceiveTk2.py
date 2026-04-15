@@ -23,8 +23,8 @@ import paho.mqtt.client as mqtt  # import library
 import socket
 import csv
 
-MQTT_BROKER = "127.0.0.1"  # specify the broker address, it can be IP of raspberry pi or simply localhost
-MQTT_TOPIC = "test"  # this is the name of topic
+MQTT_BROKER = "192.168.1.192"  # specify the broker address, it can be IP of raspberry pi or simply localhost
+MQTT_TOPIC = "teensy/data"  # this is the name of topic
 
 global okFic
 okFic = False
