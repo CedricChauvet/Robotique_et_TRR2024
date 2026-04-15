@@ -9,11 +9,11 @@ La fréquence de lecture des lasers est celle par défaut : 100Hz
 #include "Wire.h"                  // Libraire comminication I2C et SPI
 #include "Servo.h"
 #include <TFMPlus.h>
-TFMPlus tfmP;         // Creation objet TFMini Avant
-TFMPlus tfmP2;        // Creation objet TFMini Arriere
-TFMPlus tfmP3;        // Creation objet TFMini Frontal
-TFMPlus tfmP4;        // Creation objet TFMini Frontal 2
-TFMPlus tfmP5;        // Creation objet TFMini Frontal 3
+TFMPlus tfmP1;         // Creation objet TFMini Avant Gauche
+TFMPlus tfmP2;        // Creation objet TFMini Avant Droit
+TFMPlus tfmP3;        // Creation objet TFMini Frontal Gauche
+TFMPlus tfmP4;        // Creation objet TFMini Frontal Droit
+TFMPlus tfmP5;        // Creation objet TFMini Frontal Central
                   
 String chaine = " ";                          // chaine de caractère contenant le message 
 
@@ -31,6 +31,8 @@ bool idLB=false;
 bool idLC=false;
 bool idLD=false;
 bool idL5=false;
+
+unsigned long lastMsg = 0;
 
                     // variables odométrie 
 unsigned long t;                                        // délai entre deux lecture du pignon pour odométrie
@@ -95,17 +97,14 @@ float tronCon[16][2] {         // tableau 16 tronçons : cm et km/h
  };
  int lgTroncon =(sizeof(tronCon)/sizeof(tronCon[0]))-1;                    
                       // Acquisitions mesures capteurs laser
-int FAR;                                         //mesure du laser AV G
-int FAV;  
-int Lidar5;                                       //mesure du laser AV droit
-int dgau;                                     //dist cm mesurée laser AV G changement de variable
-int ddroit;                                    //dist cm mesurée laser AV D
-int FAF;                                         //mesure du laser frontal gauche
-int FAFD;                                        //mesure du laser frontal droite
-int check;                                      //variable de contrôle checksum tampon données laser
+int AVG;                                         //mesure du laser AV G
+int AVD;          //mesure du laser AV droit
+int FC;           //mesure du laser Frontal Centre                            
+int FG;           //mesure du laser frontal gauche
+int FD;           //mesure du laser frontal droite
+int check;        //variable de contrôle checksum tampon données laser
 int i;
-int uart[9];       
-int uart2[9];           //variable tableau stockage tampon données laser
+
 const int HEADER=0x59;                          //entête tampon données laser
                 // variables spécifiques au pilotage lasers droite
 float l=19.5;                                      // distance en cm entre les deux capteurs lasers latéraux droite
@@ -133,7 +132,9 @@ int freq = 0;
 
 void setup() {
 
-  Serial.begin(115200);                             //initialisation vitesse port série entre esp32 et pc
+  Serial.begin(115200);
+  Serial6.begin(115200); 
+                              //initialisation vitesse port série entre esp32 et pc
   initSerialTfminiPlus();                           // Initialisation des ports série et des objets tfminiPlus
   softResetTfmini();                                // Reset des tfminiPlus
   frameRateTfminiPlus();                            // paramétrage de la fréquence d'acquisition des tfminiPlus
@@ -160,7 +161,7 @@ void loop() {
   litLaser('B');                                    // appel fonction lecture laser arriere
   litLaser('C');                                    // appel fonction lecture laser frontal
   litLaser('D');                                    // appel fonction lecture laser frontalv2
-  //litLaser('E');                                    // appel fonction lecture laser frontalv2
+  litLaser('E');                                    // appel fonction lecture laser frontalv2
 
 Erreur();                                         // appel fonction calcul erreur de trajectoire 
 topservo=micros();
@@ -190,9 +191,9 @@ erreur= K1*(consigneAlpha-alpha)+ K2*(consigneD-FAV);   // erreur totale : erreu
 angleBraq = (-1.07*erreur)+89.36;          //PWM pour braquage servo, fonction de loi de calibration servo
 lastDist = FAV;
 lastAlpha = alpha;*/
-ddroit=FAV;
-dgau=FAR;
-erreur= 1*(dgau-ddroit);
+
+
+erreur= 1*(AVG-AVD);
 angleBraq=(-1.07*erreur)+89.36; 
 //angleBraq=89.;
 }
@@ -271,15 +272,15 @@ void motor(){
  }
 void debug(){
     Serial.print(" A ");
-    Serial.print(FAV);                             //affichage distance mesuré par le laser avant
+    Serial.print(AVG);                             //affichage distance mesuré par le laser avant
     Serial.print(" B ");
-    Serial.print(FAR);                             //affichage distance mesuré par le laser arrière
+    Serial.print(AVD);                             //affichage distance mesuré par le laser arrière
     Serial.print(" C ");
-    Serial.print(FAF);                             //affichage distance mesuré par le laser frontal gauche
+    Serial.print(FG);                             //affichage distance mesuré par le laser frontal gauche
     Serial.print(" D ");
-    Serial.print(FAFD);                             //affichage distance mesuré par le laser frontal droite 
-    //Serial.print( " E ");
-    //Serial.print(Lidar5),
+    Serial.print(FD);                             //affichage distance mesuré par le laser frontal droite 
+    Serial.print( " E ");
+    Serial.print(FC);                             //affichage distance mesuré par le laser frontal centre,
     
     /*
   Serial.print("   Dist laser mur cm  ");Serial.print(FAV);
@@ -291,22 +292,30 @@ void debug(){
   Serial.print("   F loop  ");Serial.println(1000000/(t2-t1));       // fréquence d'exécution de la loop
 
  }
-void messageOut(){                      // chargement du contenu de message à publier 
-  chaine = " ";
-  chaine = chaine + FAV + " ";                       // Laser
-  chaine = chaine + FAR + " ";              // Laser
-  chaine = chaine + FAF + " ";              // Laser Frontal
-  chaine = chaine + FAFD + " ";             // Laser Frontal
-  chaine = chaine + angleBraq + " ";        // angle braquage
-  chaine = chaine + PwmVIT + " ";           // angle PWM
-  chaine = chaine + deltaMicro + " ";       // deltaMicro
-  chaine = chaine + nb_tour_sec + " ";      // nb_tour_sec
-  chaine = chaine + nbPignon + " ";         // nbPignon
-  chaine = chaine + cumDist + " ";          // cumDist
-  chaine = chaine + VIT + " ";              // vitesse
-  chaine = chaine + freq + " ";       // fréquence
- }
-
+void messageOut() {
+  if (consi == 0) {
+    return;  // ne pas envoyer de message si la consigne est nulle (pas de course)
+  }
+  else {  
+    if (millis() - lastMsg < 20) return;  // max 50Hz
+    lastMsg = millis();
+    chaine = " ";
+    chaine = AVG + " ";
+    chaine = chaine + AVD + " ";
+    chaine = chaine + FG + " ";
+    chaine = chaine + FD + " ";
+    chaine = chaine + FC + " ";
+    chaine = chaine + angleBraq + " ";
+    chaine = chaine + PwmVIT + " ";
+    chaine = chaine + deltaMicro + " ";
+    chaine = chaine + nb_tour_sec + " ";
+    chaine = chaine + nbPignon + " ";
+    chaine = chaine + cumDist + " ";
+    chaine = chaine + VIT + " ";
+    chaine = chaine + freq ;       // fréquence
+    Serial6.println( chaine );  // marqueur début $ et fin #
+  }
+}
 
 void mesureFreqLaser(char ID){
     tt1=micros()-tt0;
@@ -325,146 +334,129 @@ void mesureFreqLaser(char ID){
     if(ID=='D'){
       idLD = true;
     }
-    //if(ID=='E'){
-    //  idL5 = true;
-    //}    
+    if(ID=='E'){
+      idL5 = true;
+    }    
 }
 
 void initSerialTfminiPlus(){      // Initialisation des ports série et des objets tfminiPlus
+  Serial1.begin(115200); 
+  delay(20);                  // délais pour initialisation du port
+    tfmP1.begin( &Serial1);   // initialisation de l'objet tfminiPlus et affectation du port série              
+
+
   Serial2.begin(115200);
   delay(20);                  // délais pour initialisation du port
     tfmP2.begin( &Serial2);   // initialisation de l'objet tfminiPlus et affectation du port série
 
-  Serial1.begin(115200); 
-  delay(20);                  // délais pour initialisation du port
-    tfmP.begin( &Serial1);   // initialisation de l'objet tfminiPlus et affectation du port série              
-
-  // initialisation port série virtuel et contrôle
   Serial3.begin(115200);
-
-
   delay(20);               // délais pour initialisation du port
-  tfmP3.begin( &Serial3);   // initialisation de l'objet tfminiPlus et affectation du port série   
+    tfmP3.begin( &Serial3);   // initialisation de l'objet tfminiPlus et affectation du port série   
 
   // initialisation port série virtuel et contrôle
   Serial4.begin(115200);
   delay(20);               // délais pour initialisation du port
   tfmP4.begin(&Serial4);   // initialisation de l'objet tfminiPlus et affectation du port série   
   
-  //Serial5.begin(115200);
-  //delay(20);               // délais pour initialisation du port
-  //tfmP5.begin(&Serial5);   // initialisation de l'objet tfminiPlus et affectation du port série   
+  Serial5.begin(115200);
+  delay(20);               // délais pour initialisation du port
+  tfmP5.begin(&Serial5);   // initialisation de l'objet tfminiPlus et affectation du port série   
   
 }
 
 void softResetTfmini(){   // Reset des tfminiPlus
 
-    Serial.println( "Soft reset: ");
-    if( tfmP.sendCommand( SOFT_RESET, 0))
+    Serial.println( "Soft reset Capteur A (avant gauche): ");
+    if( tfmP1.sendCommand( SOFT_RESET, 0))
     {
         Serial.println( "reset ok\r\n");
     }
-    else tfmP.printReply();
-  
+    else tfmP1.printReply();  
     delay(500);  // delai d'attente pour que le rest soit complet
 
-       Serial.println( "Soft reset: ");
+
+    Serial.println( "Soft reset Capteur B (avant droit): ");
     if( tfmP2.sendCommand( SOFT_RESET, 0))
     {
-        Serial.println( "reset ok\r\n");
+      Serial.println( "reset ok\r\n");
     }
     else tfmP2.printReply();
-  
     delay(500);   // delai d'attente pour que le rest soit complet
 
-       Serial.println( "Soft reset: ");
+
+    Serial.println( "Soft reset Capteur C (Frontal Gauche): ");
     if( tfmP3.sendCommand( SOFT_RESET, 0))
     {
         Serial.println( "reset ok\r\n");
     }
     else tfmP3.printReply();
-  
     delay(500);  // delai d'attente pour que le rest soit complet
 
-       Serial.println( "Soft reset: ");
+    Serial.println( "Soft reset Capteur D (Frontal Droit): ");
     if( tfmP4.sendCommand( SOFT_RESET, 0))
     {
         Serial.println( "reset ok\r\n");
     }
     else tfmP4.printReply();
+    delay(500);  
   
-    delay(500);  // delai d'attente pour que le rest soit complet
-  
-    //   Serial.println( "Soft reset: ");
-    //if( tfmP5.sendCommand( SOFT_RESET, 0))
-    //{
-    //    Serial.println( "reset ok\r\n");
-    //}
-    //else tfmP5.printReply();
-  
-    delay(500);  // delai d'attente pour que le rest soit complet
 
-
+    Serial.println( "Soft reset Capteur E (Frontal Centre): ");
+    if( tfmP5.sendCommand( SOFT_RESET, 0))
+    {
+      Serial.println( "reset ok\r\n");
+    }
+    else tfmP5.printReply();
+    delay(500);  // delai d'attente pour que le rest soit complet
 }
 
 void frameRateTfminiPlus(){   // paramétrage de la fréquence d'acquisition des tfminiPlus
-
-     // - - initialize la fréquence du laser avant à 250Hz - - - - - - - -
+    
+  
+  // - - initialize la fréquence du laser avant à 250Hz - - - - - - - -
     Serial.println( "Data-Frame rate: ");
-    if( tfmP.sendCommand( SET_FRAME_RATE, FRAME_250))
+    if( tfmP1.sendCommand( SET_FRAME_RATE, FRAME_250))
     {
-
-        Serial.print( "frame AV "); Serial.println(FRAME_250);
+      Serial.print( "frame AV "); Serial.println(FRAME_250);
     }
-    else tfmP.printReply();
-
+    else tfmP1.printReply();
     delay(500);
 
-     // - - initialize la fréquence du laser arriere à 250Hz - - - - - - - -
+
     Serial.println( "Data-Frame rate: ");
     if( tfmP2.sendCommand( SET_FRAME_RATE, FRAME_250))
     {
-
-        Serial.print( "frame AR "); Serial.println(FRAME_250);
+      Serial.print( "frame AR "); Serial.println(FRAME_250);
     }
     else tfmP2.printReply();
-
     delay(500);   
 
-     // - - initialize la fréquence du laser frontal à 100Hz - - - - - - - -
-   Serial.println( "Data-Frame rate: ");
+    Serial.println( "Data-Frame rate: ");
     if( tfmP3.sendCommand( SET_FRAME_RATE, FRAME_250))
     {
-
-        Serial.print( "frame AF "); Serial.println(FRAME_250);
+      Serial.print( "frame FG "); Serial.println(FRAME_250);
     }
     else tfmP3.printReply();
-
     delay(500);   
 
-     // - - initialize la fréquence du laser frontal à 100Hz - - - - - - - -
-   Serial.println( "Data-Frame rate: ");
+    
+    Serial.println( "Data-Frame rate: ");
     if( tfmP4.sendCommand( SET_FRAME_RATE, FRAME_250))
     {
-
-        Serial.print( "frame AFD "); Serial.println(FRAME_250);
+      Serial.print( "frame FD "); Serial.println(FRAME_250);
     }
     else tfmP4.printReply();
-
     delay(500);   
 
 
-     // - - initialize la fréquence du laser frontal à 100Hz - - - - - - - -
-   //Serial.println( "Data-Frame rate: ");
-   // if( tfmP5.sendCommand( SET_FRAME_RATE, FRAME_250))
-   // {
-
-    //    Serial.print( "frame lidar5 "); Serial.println(FRAME_250);
+    Serial.println( "Data-Frame rate: ");
+    if( tfmP5.sendCommand( SET_FRAME_RATE, FRAME_250))
+    {
+      Serial.print( "frame FC "); Serial.println(FRAME_250);
     }
-    //else tfmP5.printReply();
-
-    //delay(500);   
-                                   
+    else tfmP5.printReply();
+    delay(500);   
+}                               
 
 
 void litLaser(char car){     // Lecture des lasers
@@ -474,12 +466,12 @@ void litLaser(char car){     // Lecture des lasers
     int16_t tfTemp = 0;    // Température interne du laser
 
   if(car=='A'){ 
-      if( tfmP.getData( tfDist, tfFlux, tfTemp)) // obtenir les données du laser avant
+      if( tfmP1.getData( tfDist, tfFlux, tfTemp)) // obtenir les données du laser avant
       {
         mesureFreqLaser('A');
          if (tfDist >0)
         {
-          FAV=tfDist;
+          AVG=tfDist;
         }
       }
       else                  // If the command fails...
@@ -495,7 +487,7 @@ void litLaser(char car){     // Lecture des lasers
         mesureFreqLaser('B');
         if (tfDist >0)
         {
-          FAR=tfDist;
+          AVD=tfDist;
         }
       }
       else                  // If the command fails...
@@ -511,7 +503,7 @@ void litLaser(char car){     // Lecture des lasers
         mesureFreqLaser('D');                                 // appel fonction permettant d'estimer la fréquence d'acquisition d'un laser
         if (tfDist >0)
         {
-            FAF=tfDist;
+            FG=tfDist;
         }
       }
       else                  // If the command fails...
@@ -527,7 +519,7 @@ void litLaser(char car){     // Lecture des lasers
         mesureFreqLaser('D');                                 // appel fonction permettant d'estimer la fréquence d'acquisition d'un laser
         if (tfDist >0)
         {
-            FAFD=tfDist;
+            FD=tfDist;
         }
       }
       else                  // If the command fails...
@@ -537,14 +529,14 @@ void litLaser(char car){     // Lecture des lasers
     }
   } 
 
-  //    if(car=='E'){
-  //    if( tfmP5.getData( tfDist, tfFlux, tfTemp)) // obtenir les données du laser frontal
-  //    {
-  //      mesureFreqLaser('E');                                 // appel fonction permettant d'estimer la fréquence d'acquisition d'un laser
-  //      if (tfDist >0)
-  //      {
-  //          Lidar5=tfDist;
-  //      }
-  //    }
-  //}
+    if(car=='E'){
+      if( tfmP5.getData( tfDist, tfFlux, tfTemp)) // obtenir les données du laser frontal
+      {
+        mesureFreqLaser('E');                                 // appel fonction permettant d'estimer la fréquence d'acquisition d'un laser
+        if (tfDist >0)
+        {
+          FC=tfDist;
+        }
+      }
+  }
 }
