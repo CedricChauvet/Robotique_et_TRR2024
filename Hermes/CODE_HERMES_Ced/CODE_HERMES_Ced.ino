@@ -19,10 +19,10 @@ String chaine = " ";                          // chaine de caractère contenant 
 
 Servo myservo;                       // déclaration objet servo
 
-const int pinTpntH=12;                // pin pont en H forward
-const int pinTpntHrev=18;             // pin pont en H reverse
+const int pinTpntH=12;                // pin pont en H forward 
+const int pinTpntHrev=11;             // pin pont en H reverse
 const int pinServo=5;                 // pin servo direction  
-const int pinOdo=13;                   // pin odométrie
+const int pinOdo= 3;                   // pin odométrie
 int angleDefault=88;                  // variable de commande servo direction à braquage nul
 int angleBraq=angleDefault;           // variable commande braquage
 
@@ -145,7 +145,8 @@ void setup() {
   myservo.attach(pinServo);                         // déclaration objet myservo
   pinMode(pinTpntH,OUTPUT);                         // initialisation pin forward pont en H
   pinMode(pinTpntHrev,OUTPUT);                      // initialisation pin reverse pont en H
-  pinMode(pinOdo,INPUT);                // initialisation pin signal hallattachInterrupt(pinOdo,countInterrupt,FALLING);  // appel interruption pour mesurer le nombre de tours
+  pinMode(pinOdo,INPUT);                // initialisation pin signal hall
+  attachInterrupt(pinOdo,countInterrupt,FALLING);  // appel interruption pour mesurer le nombre de tours
   movServo();                                     // mise à la position neutre du servo de direction
   delay(6000);
   Serial.println("fin setup");
@@ -178,7 +179,7 @@ t2=micros();
 debug();     
 
          // appel fonction affichage infos sur console. A commenter pour exploitation en course 
-messageOut();                                    // chargement du contenu de message à publier 
+//messageOut();                                    // chargement du contenu de message à publier 
 
 }
 //}
@@ -200,9 +201,11 @@ angleBraq=(-1.07*erreur)+89.36;
 void ouEstil() {
   cumDist = (nbPignon)*3.1416*7.2/2;      // en cm, diam roue 7.2, 2 aimants,calcul cumul distance 
   for (int i=0; i <= 8;i++){ 
+
     if(cumDist >= tronCon[i][0] and cumDist < tronCon[i+1][0]){
       consi = tronCon[i][1];
     }
+
   }
 }
 void  asservissement_T(){                       // asservissement vitesse en fonction de la consigne tronçon
@@ -267,7 +270,7 @@ void movServo(){
   myservo.write(angleBraq);
 }
 void motor(){
-  PwmVIT = constrain(PwmVIT, 0,100);
+  PwmVIT = constrain(PwmVIT, 0,70);
   analogWrite(pinTpntH,PwmVIT);
  }
 void debug(){
@@ -280,16 +283,13 @@ void debug(){
     Serial.print(" D ");
     Serial.print(FD);                             //affichage distance mesuré par le laser frontal droite 
     Serial.print( " E ");
-    Serial.print(FC);                             //affichage distance mesuré par le laser frontal centre,
+    Serial.println(FC);                             //affichage distance mesuré par le laser frontal centre,
     
-    /*
-  Serial.print("   Dist laser mur cm  ");Serial.print(FAV);
-  Serial.print("   Erreur/milieu cm  ");Serial.print(erreur);
+    
   Serial.print("   Braquage °  ");Serial.print(angleBraq);
   Serial.print("   Dist parcourue cm  ");Serial.print(cumDist);
   //Serial.print("   PwmVIT asservi  ");Serial.print(PwmVIT);
-  Serial.print("   VIT compteur ");Serial.print(VIT );*/
-  
+  Serial.println("   VIT compteur ");Serial.print(VIT ); 
   freq = 1000000/(t2-t1);
   Serial.print("   F loop  ");Serial.println(freq);       // fréquence d'exécution de la loop
 
