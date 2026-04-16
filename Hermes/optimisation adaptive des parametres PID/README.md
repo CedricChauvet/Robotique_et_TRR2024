@@ -1,4 +1,3 @@
-
 # Optimisation Adaptative des Paramètres PID par Rétropropagation de Gradient sur Système Physique Réel
 
 **Application : Véhicule RC autonome — Moteur DC brushed / Pont H IBT-2 / Teensy**
@@ -251,6 +250,35 @@ loss = Σ  t × |erreur(t)| × poids_securite(t)
 
 SPSA apprend ainsi naturellement à prioriser la précision aux endroits critiques, sans qu'on ait besoin de lui décrire la géométrie de la piste.
 
+### 6.3 Distinction d_seuil / d_critique
+
+Ces deux distances jouent des rôles fondamentalement différents :
+
+| Paramètre | Rôle | Optimisé par SPSA ? |
+|---|---|---|
+| `d_seuil` | Distance à laquelle le robot **commence à décélérer** | ✅ Oui |
+| `d_critique` | Distance minimale de sécurité à l'obstacle — **constante physique** | ❌ Non |
+
+**`d_seuil`** est une action de commande : trop grand → on freine trop tôt et on perd du temps ; trop petit → on arrive en virage trop vite. SPSA trouve la valeur optimale.
+
+**`d_critique`** est la règle du jeu : c'est la distance à l'obstacle en dessous de laquelle une erreur de vitesse devient inacceptable. Elle est fixée par la géométrie de la piste, indépendamment de l'algorithme.
+
+```python
+d_critique = 0.30   # m — distance minimale à l'obstacle
+                    # fixée par la géométrie, NE PAS optimiser avec SPSA
+```
+
+Avec `d_critique = 30 cm`, le comportement de la pondération est le suivant :
+
+```
+d = 30 cm  →  exp(-1)    ≈ 0.37  →  poids modéré, alerte
+d = 10 cm  →  exp(-0.33) ≈ 0.72  →  poids fort
+d =  5 cm  →  exp(-0.17) ≈ 0.85  →  poids très fort
+d =  0 cm  →  exp(0)     = 1.00  →  poids maximum = 1 + α
+```
+
+La loss augmente fortement à mesure qu'on s'approche des 30 cm — SPSA apprend à ne jamais laisser le véhicule atteindre cette zone avec une vitesse excessive.
+
 ---
 
 ## 7. Modes de Freinage — IBT-2
@@ -272,13 +300,9 @@ Avant toute optimisation SPSA, il est indispensable de caractériser expériment
 
 **Expérience 2 — Frein dynamique (prioritaire) :** même protocole, appliquer `RPWM=0 / LPWM=0` avec les enables actifs. Mesurer le gain en décélération par rapport au coast. C'est le mode le plus pertinent car il est sûr, reproductible et directement exploitable dans la boucle SPSA.
 
-**Expérience 3 — Régénératif dosé à 25%, 50%, 75% de duty cycle inverse :** mesurer la courbe décélération/duty pour établir la relation de commande.
+Ces deux expériences sont implémentées dans le fichier :
 
-Ces trois expériences sont implémentées dans le fichier :
-
-```
-freinage_caracterisation.py
-```
+[`hardware/freinage`](https://github.com/CedricChauvet/Robotique_et_TRR2026/blob/main/Hermes/optimisation%20adaptive%20des%20parametres%20PID/hardware/freinage_dynamique/freinage_dynamique.ino)
 
 Ce script sera développé ultérieurement. Il produira les courbes vitesse/temps pour chaque mode et calculera automatiquement la décélération moyenne en m/s².
 
