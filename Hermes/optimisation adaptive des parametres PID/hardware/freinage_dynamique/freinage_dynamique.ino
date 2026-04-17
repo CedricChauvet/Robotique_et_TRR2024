@@ -2,12 +2,11 @@
 //  freinage_caracterisation.ino
 //  Teensy — IBT-2 — Capteur Hall odométrie
 //
-//  Objectif : comparer la décélération en mode coast vs frein
-//  dynamique lors d'une transition 14 km/h → 8 km/h
+//  Objectif : mesurer la décélération en frein dynamique
+//  lors d'une transition vitesse réelle → 8 km/h
 //
-
-//  Sortie Série MQTT : CSV  temps_ms, vitesse_kmh, distance_m, mode
-//  → coller dans freinage_caracterisation.py pour les graphes
+//  Sortie Série MQTT : CSV  temps_ms;etat;mode;VIT;cumDist;nbPignon;nb_tour_sec;PWM
+//  → exploiter dans freinage_caracterisation.py pour les graphes
 // =============================================================
 
 // ---- Broches IBT-2 ------------------------------------------
@@ -17,46 +16,39 @@
 #define L_EN   8
 
 // ---- Broche odométrie Hall ----------------------------------
-#define PIN_ODO  3    // doit être une broche interruption Teensy
+#define PIN_ODO  3    // broche interruption Teensy
 
 // ---- Paramètres physiques -----------------------------------
-const float DIAMETRE_ROUE_M = 0.072;          // 7.2 cm
-const float PI_F             = 3.14159265;
-const float PERIMETRE_ROUE_M = PI_F * DIAMETRE_ROUE_M;  // ~0.2262 m
+const float DIAMETRE_ROUE_M  = 0.072;
+const float PI_F              = 3.14159265;
+const float PERIMETRE_ROUE_M  = PI_F * DIAMETRE_ROUE_M;  // ~0.2262 m
 
 // ---- Consignes de vitesse -----------------------------------
-const float VIT_HAUTE   = 14.0;   // km/h — vitesse de départ
-const float VIT_BASSE   =  8.0;   // km/h — vitesse cible après freinage
-const int   PWM_ACCEL   = 180;    // PWM pour atteindre ~14 km/h (à ajuster)
-const float TOLERANCE   =  0.5;   // km/h — fenêtre de stabilisation
+const float VIT_BASSE        =  8.0;    // km/h — vitesse cible après freinage
+const int   PWM_ACCEL        = 180;     // PWM pour atteindre la vitesse de départ (à ajuster)
+const unsigned long DUREE_AVANT_FREIN = 4000;  // 3s accel + 1s stabilisation
 
 // ---- Variables odométrie ------------------------------------
-volatile unsigned long nbPignon    = 0;
-volatile unsigned long lastNbPignon = 0;
-volatile unsigned long lastMicro   = 0;
+volatile unsigned long nbPignon = 0;
 
-float VIT      = 0.0;   // km/h
-float cumDist  = 0.0;   // m
+float VIT         = 0.0;   // km/h
+float cumDist     = 0.0;   // m
 float nb_tour_sec = 0.0;
 
 // ---- Variables test -----------------------------------------
-enum Mode { ATTENTE, ACCELERATION, STABILISATION, FREINAGE, TERMINE };
+enum Mode { ATTENTE, ACCELERATION, FREINAGE };
 Mode etatTest = ATTENTE;
 
 String modeFreinage = "DYNAMIQUE";
-// String modeFreinage = "COAST"; dans le cas d'un ralentissement naturel
-unsigned long tDebut        = 0;
+// String modeFreinage = "COAST";   // décommenter pour le test coast
+
+unsigned long tDebut         = 0;
 unsigned long tDebutFreinage = 0;
-float distDebutFreinage     = 0.0;
-
-
-// ---- Durées des phases --------------------------------------
-const unsigned long DUREE_ACCEL_MS   = 3000;   // 3s d'accélération
-const unsigned long DUREE_STAB_MS    = 1000;   // 1s de stabilisation
-
+float distDebutFreinage      = 0.0;
+float vitDebutFreinage       = 0.0;   // vitesse réelle mesurée au moment du freinage
 
 // ---- Log ----------------------------------------------------
-const int  LOG_INTERVAL_MS = 20;    // 50 Hz
+const int  LOG_INTERVAL_MS = 20;   // 50 Hz
 unsigned long lastMsg      = 0;
 bool logActif = false;
 String chaine = "";
@@ -64,7 +56,7 @@ String chaine = "";
 // =============================================================
 void setup() {
   Serial.begin(115200);
-  Serial6.begin(115200); 
+  Serial6.begin(115200);
 
   while (!Serial || !Serial6) {}
 
@@ -74,7 +66,6 @@ void setup() {
   pinMode(R_EN, OUTPUT);
   pinMode(L_EN, OUTPUT);
 
-  // Enables actifs par défaut
   digitalWrite(R_EN, HIGH);
   digitalWrite(L_EN, HIGH);
 
@@ -84,69 +75,71 @@ void setup() {
   pinMode(PIN_ODO, INPUT);
   attachInterrupt(digitalPinToInterrupt(PIN_ODO), countInterrupt, FALLING);
 
-  Serial.println("# freinage_dynamique.ino pret");
-  Serial.print("Mode de freinage: ");Serial.println(modeFreinage);
-  nbPignon     = 0;
-  cumDist      = 0.0;
-  VIT          = 0.0;
-  nb_tour_sec  = 0.0;
-  tDebut       = millis();
-  logActif     = true;
-  etatTest     = ACCELERATION;
-  Serial.println("# Debut test FREIN_DYNAMIQUE");
+  Serial.println("# freinage_caracterisation.ino pret");
+  Serial.print("# Mode de freinage : "); Serial.println(modeFreinage);
+  Serial.println("# temps_ms;etatTest;modeFreinage;VIT;cumDist;nbPignon;nb_tour_sec;PWM_ACCEL");
+
+  nbPignon    = 0;
+  cumDist     = 0.0;
+  VIT         = 0.0;
+  nb_tour_sec = 0.0;
+  tDebut      = millis();
+  logActif    = true;
+  etatTest    = ACCELERATION;
+  Serial.println("# Debut test");
 }
 
 // =============================================================
 void loop() {
 
-  calculerVitesse();   // ← ajouter cette ligne ici
-    
-  // Machine à états temporelle
+  compteur();
+
   switch (etatTest) {
 
     case ACCELERATION:
       avancer(PWM_ACCEL);
-      if (millis() - tDebut >= DUREE_ACCEL_MS) {
-        etatTest = STABILISATION;
-      }
-      break;
-
-    case STABILISATION:
-      avancer(PWM_ACCEL);
-      if (millis() - tDebut >= DUREE_ACCEL_MS + DUREE_STAB_MS) {
+      if (millis() - tDebut >= DUREE_AVANT_FREIN) {
         tDebutFreinage    = millis();
         distDebutFreinage = cumDist;
-        freinDynamique();
+        vitDebutFreinage  = VIT;     // vitesse réelle mesurée
+        arreter();                   // IBT-2 maintient cet état jusqu'à la fin
         etatTest = FREINAGE;
       }
       break;
-
-    case FREINAGE:
+ case FREINAGE:
+      if (millis() - tDebutFreinage > 10000) {
+        Serial.println("# TIMEOUT — verifier odometrie");
+        logActif = false;
+        etatTest = ATTENTE;
+        break;
+      }
       if (VIT <= VIT_BASSE) {
-        arreter();
         unsigned long duree_ms = millis() - tDebutFreinage;
         float dist_m           = cumDist - distDebutFreinage;
-        float decel_mss        = vitesseKmhToMs(VIT_HAUTE - VIT_BASSE)
+        float decel_mss        = vitesseKmhToMs(vitDebutFreinage - VIT_BASSE)
                                  / (duree_ms / 1000.0);
 
         Serial.println("# ---- RESULTATS ----");
         Serial.print("# Mode            : "); Serial.println(modeFreinage);
-        Serial.print("# Duree freinage  : "); Serial.print(duree_ms);   Serial.println(" ms");
-        Serial.print("# Distance        : "); Serial.print(dist_m, 3);  Serial.println(" m");
-        Serial.print("# Deceleration ~  : "); Serial.print(decel_mss, 2); Serial.println(" m/s²");
+        Serial.print("# Vit. debut      : "); Serial.print(vitDebutFreinage, 2); Serial.println(" km/h");
+        Serial.print("# Duree freinage  : "); Serial.print(duree_ms);            Serial.println(" ms");
+        Serial.print("# Distance        : "); Serial.print(dist_m, 3);           Serial.println(" m");
+        Serial.print("# Deceleration ~  : "); Serial.print(decel_mss, 2);        Serial.println(" m/s2");
         Serial.println("# --------------------");
-        Serial.println("# Test terminé. Envoyer n'importe quelle touche pour relancer.");
         logActif = false;
         etatTest = ATTENTE;
       }
       break;
 
-    default:
-      break;
-  }
 
-  // Log série
+  case ATTENTE:
+      // état terminal — IBT-2 en frein, moteur arrêté
+      // rien à faire
+      break;
+
+
   if (logActif) messageOut();
+  }
 }
 
 // =============================================================
@@ -156,11 +149,11 @@ void countInterrupt() {
   nbPignon++;
 }
 
-void calculerVitesse() {
+void compteur() {
   static unsigned long lastNb    = 0;
   static unsigned long lastMicro = 0;
 
-  unsigned long nb = nbPignon;
+  unsigned long nb    = nbPignon;
   unsigned long delta = nb - lastNb;
 
   if (delta > 0) {
@@ -169,8 +162,8 @@ void calculerVitesse() {
 
     if (dt_us > 0) {
       nb_tour_sec = (float)delta / (dt_us / 1000000.0);
-      VIT         = nb_tour_sec * PERIMETRE_ROUE_M * 3600.0;   // km/h
-      cumDist     = (float)nb * PERIMETRE_ROUE_M;              // m
+      VIT         = nb_tour_sec * PERIMETRE_ROUE_M * 3600.0 * 2.0;   // km/h
+      cumDist     = (float)nb  * PERIMETRE_ROUE_M * 2.0;             // m
     }
 
     lastNb    = nb;
@@ -198,14 +191,12 @@ void freinDynamique() {
 }
 
 void freinCoast() {
-  // freinage par friction moteur
-  // RPWM=0, LPWM=0 avec les enables desactivés
+  // Freinage par friction — enables desactives
   digitalWrite(R_EN, LOW);
   digitalWrite(L_EN, LOW);
   analogWrite(RPWM, 0);
   analogWrite(LPWM, 0);
 }
-
 
 void arreter() {
   if (modeFreinage == "DYNAMIQUE") {
@@ -224,21 +215,21 @@ float vitesseKmhToMs(float kmh) {
 }
 
 // =============================================================
-//  Log Série
+//  Log Serie
 // =============================================================
 void messageOut() {
   if (!logActif) return;
   if (millis() - lastMsg < LOG_INTERVAL_MS) return;
   lastMsg = millis();
 
-  chaine  = String(millis() - tDebut)  + ";";
-  chaine += String(etatTest)           + ";";
-  chaine += String(modeFreinage)       + ";";
-  chaine += String(VIT)                + ";";
-  chaine += String(cumDist)            + ";";
-  chaine += String(nbPignon)           + ";";
-  chaine += String(nb_tour_sec)        + ";";
-  chaine += String(PWM_ACCEL)          + ";";
+  chaine  = String(millis() - tDebut) + ";";
+  chaine += String(etatTest)          + ";";
+  chaine += String(modeFreinage)      + ";";
+  chaine += String(VIT)               + ";";
+  chaine += String(cumDist)           + ";";
+  chaine += String(nbPignon)          + ";";
+  chaine += String(nb_tour_sec)       + ";";
+  chaine += String(PWM_ACCEL)         + ";";
 
   Serial6.println(chaine);
-  }
+}
