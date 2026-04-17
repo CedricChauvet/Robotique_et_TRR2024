@@ -122,6 +122,12 @@ J_vu_moteur = J_total / G²      (inertie réduite)
 
 G influence directement la réactivité du système et donc les valeurs optimales de P, I, D. Il sera déterminé expérimentalement en comptant les tours du moteur pour un tour de roue.
 
+
+
+### 3.4 Reponse du véhicule soumis a un pwm = 180 puis freinage
+![plot reponse a un step](https://github.com/CedricChauvet/Robotique_et_TRR2026/blob/main/Hermes/optimisation%20adaptive%20des%20parametres%20PID/simulation/step_response.png)
+
+
 ---
 
 ## 4. Deux Configurations de Test
