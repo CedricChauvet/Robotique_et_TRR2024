@@ -20,7 +20,7 @@ class MotorModel:
         self.J_B    = 0.0013    # kg.m²  inertie roues seules (sans masse vehicule)
         self.Tf = 0.00005   # N.m  frottement sec — réduit pour banc sans charge
         self.B  = 0.00005   # frottement visqueux — idem
-        self.a_frein_B = 2  # m/s²  — à remplacer par la valeur du .ino
+        self.a_frein_B = 2  # m/s²  — à remplacer par la valeur du .ino sur banc
 
         # --- Mecanique piste ---
         self.M         = 1.0      # kg  masse vehicule
