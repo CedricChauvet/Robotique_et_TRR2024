@@ -6,7 +6,7 @@
 
 class MotorModel:
 
-    def __init__(self):
+    def __init__(self, config="banc"):
 
         # --- Electrique ---
         self.R    = 0.1      # Ω  resistance armature
@@ -17,9 +17,15 @@ class MotorModel:
 
         # --- Mecanique banc ---
         self.r    = 0.036     # m  rayon roue
-        self.J    = 0.0013    # kg.m²  inertie roues seules (sans masse vehicule)
+        self.J_B    = 0.0013    # kg.m²  inertie roues seules (sans masse vehicule)
         self.Tf = 0.00005   # N.m  frottement sec — réduit pour banc sans charge
         self.B  = 0.00005   # frottement visqueux — idem
+        self.a_frein_B = 2  # m/s²  — à remplacer par la valeur du .ino
+
+        # --- Mecanique piste ---
+        self.M         = 1.0      # kg  masse vehicule
+        self.J_P       = self.J_B + self.M * self.r ** 2   # kg.m²  banc + M*r²
+        self.a_frein_P = 1.0      # m/s²   a remplacer par valeur .ino piste
 
         # --- Alimentation ---
         self.V_bat = 7.4      # V  LiPo 2S nominal
@@ -29,9 +35,21 @@ class MotorModel:
         self.omega    = 0.0   # rad/s  vitesse angulaire roue
         self.cum_dist = 0.0   # m   distance cumulee
 
-        # --- Freinage dynamique (mesure experimentale banc) ---
-        self.a_frein = 2  # m/s²  — à remplacer par la valeur du .ino
+        # --- Configuration active ---
+        self.set_config(config)
+ 
 
+    def set_config(self, config):
+        """Bascule entre configuration banc et piste"""
+        if config == "banc":
+            self.J       = self.J_B
+            self.a_frein = self.a_frein_B
+        elif config == "piste":
+            self.J       = self.J_P
+            self.a_frein = self.a_frein_P
+        else:
+            raise ValueError(f"config doit etre 'banc' ou 'piste', recu : {config}")
+        self.config = config
 
     def reset(self):
         self.i        = 0.0
