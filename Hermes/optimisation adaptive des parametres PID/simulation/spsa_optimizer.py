@@ -215,7 +215,7 @@ def plot_resultats(theta_star, motor, consigne_kmh,
 # =============================================================
 if __name__ == "__main__":
 
-    motor = MotorModel(config="piste")
+    motor = MotorModel(config="banc")
 
     # Optimisation sur maintien 8 km/h
     theta_star, historique_loss, _ = spsa(
