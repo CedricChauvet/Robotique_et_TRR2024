@@ -124,7 +124,7 @@ G influence directement la réactivité du système et donc les valeurs optimale
 
 
 
-### 3.4 Reponse du véhicule soumis a un pwm = 180 puis freinage
+### 3.4 Reponse du véhicule soumis a un pwm = 180 puis freinage - sur banc
 ![plot reponse a un step](https://github.com/CedricChauvet/Robotique_et_TRR2026/blob/main/Hermes/optimisation%20adaptive%20des%20parametres%20PID/simulation/step_response.png)
 
 
