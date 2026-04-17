@@ -13,7 +13,7 @@ from spsa_optimizer import PIDController, DT
 # =============================================================
 #  Constantes du profil
 # =============================================================
-VIT_LIGNE   = 14.0   # km/h
+VIT_LIGNE   = 16.0   # km/h
 VIT_VIRAGE  =  8.0   # km/h
 DIST_LIGNE  = 20.0   # m
 DIST_VIRAGE = 10.0   # m
@@ -28,7 +28,7 @@ D_FIXED = 0.029
 A_FREIN     = 2.0   # m/s²  — placeholder, remplacer par valeur .ino
 D_SEUIL_MIN = ((VIT_LIGNE/3.6)**2 - (VIT_VIRAGE/3.6)**2) \
               / (2 * A_FREIN)   # ≈ 2.55 m
-D_SEUIL_MAX = D_SEUIL_MIN * 4   # ≈ 6.4 m
+D_SEUIL_MAX = D_SEUIL_MIN * 4   
 
 # =============================================================
 #  Consigne basée sur la distance et d_seuil
@@ -246,7 +246,7 @@ if __name__ == "__main__":
 
     d_seuil_star, historique_loss, historique_dseuil = spsa_dseuil(
         motor,
-        n_iterations = 200,
+        n_iterations = 500,
         alpha        = 0.5,
         c            = 0.3
     )
