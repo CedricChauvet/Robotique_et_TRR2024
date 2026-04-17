@@ -28,7 +28,7 @@ for n in range(int(t_max / dt)):
     t = n * dt
 
     if   t < 10.0:
-        duty = 1
+        duty = 0.7
     else:
         duty = 0.0
 
@@ -57,7 +57,7 @@ print("=" * 40)
 print(f"  Vitesse max atteinte   : {vit_max:.2f} km/h")
 print(f"  Vitesse au freinage    : {vit_debut_frein:.2f} km/h")
 if t_atteint_8:
-    duree_frein = t_atteint_8 - 3.0
+    duree_frein = t_atteint_8 - 10.0
     dist_frein  = distances[int(t_atteint_8 / dt)] - distances[idx_frein]
     decel       = (vit_debut_frein - 8.0) / 3.6 / duree_frein
     print(f"  Temps pour atteindre 8 km/h : {duree_frein*1000:.0f} ms")
@@ -84,7 +84,7 @@ ax1.set_title(f"Step response — MotorModel banc  (G={motor.G}, duty=0.7)")
 
 # Distance
 ax2.plot(temps, distances, color='darkorange', linewidth=1.5)
-ax2.axvline(x=3.0, color='orange', linestyle='--', linewidth=1)
+ax2.axvline(x=10.0, color='orange', linestyle='--', linewidth=1)
 ax2.set_ylabel("distance cumulee (m)")
 ax2.set_xlabel("temps (s)")
 ax2.grid(True, alpha=0.3)
