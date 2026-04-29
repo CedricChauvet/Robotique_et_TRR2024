@@ -41,6 +41,7 @@ Mode etatTest = ATTENTE;
 
 String modeFreinage = "DYNAMIQUE";
 // String modeFreinage = "COAST";   // décommenter pour le test coast
+// String modeFreinage = "ACTIF";   // décommenter pour le test actif
 
 unsigned long tDebut         = 0;
 unsigned long tDebutFreinage = 0;
@@ -198,12 +199,23 @@ void freinCoast() {
   analogWrite(LPWM, 0);
 }
 
+void freinActif(int pwm=50) {
+  digitalWrite(R_EN, HIGH);
+  digitalWrite(L_EN, HIGH);
+  analogWrite(RPWM, 0);
+  analogWrite(LPWM, pwm);
+}
+
+
 void arreter() {
   if (modeFreinage == "DYNAMIQUE") {
     freinDynamique();
   }
   else if (modeFreinage == "COAST") {
     freinCoast();
+  }
+  else if (modeFreinage == "ACTIF") {
+    freinActif();
   }
 }
 
